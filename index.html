@@ -17,28 +17,29 @@
         
         @media print {
             .no-print { display: none !important; }
-            body { background-color: white !important; margin: 0; padding: 0; font-size: 9pt !important; line-height: 1.2 !important; color: #000 !important;}
+            body { background-color: white !important; margin: 0; padding: 0; font-size: 8pt !important; line-height: 1.1 !important; color: #000 !important;}
             #printableArea { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
             .avoid-break { page-break-inside: avoid; margin-bottom: 0px !important; }
             .page-break-hall, .page-break-paper { page-break-before: always; margin-bottom: 0 !important; padding-bottom: 0 !important; border: none !important;}
             .page-break-hall:first-child, .page-break-paper:first-child { page-break-before: avoid; }
-            @page { margin: 5mm; }
+            @page { size: A4 portrait; margin: 4mm; }
             
-            .table-bordered th, .table-bordered td { padding: 3.5px 6px !important; border: 1px solid #000 !important; font-size: 8.5pt !important; color: #000 !important; }
-            h2 { margin-bottom: 3px !important; font-size: 11pt !important; margin-top: 0 !important; color: #000 !important;}
-            h3.college-header { font-size: 12pt !important; margin-bottom: 2px !important; color: #000 !important;}
-            .mb-8, .mb-6, .mb-5, .mb-4, .mb-3, .mb-2 { margin-bottom: 3px !important; }
-            .mt-10, .mt-8 { margin-top: 12px !important; }
-            .py-1\.5, .py-2, .py-1 { padding-top: 2px !important; padding-bottom: 2px !important; }
+            /* Ultra compact print for single page invigilator slip */
+            .table-bordered th, .table-bordered td { padding: 2px 4px !important; border: 1px solid #000 !important; font-size: 7.5pt !important; color: #000 !important; }
+            h2 { margin-bottom: 2px !important; font-size: 10pt !important; margin-top: 0 !important; color: #000 !important;}
+            h3.college-header { font-size: 11pt !important; margin-bottom: 2px !important; color: #000 !important;}
+            .mb-8, .mb-6, .mb-5, .mb-4, .mb-3, .mb-2 { margin-bottom: 2px !important; }
+            .mt-10, .mt-8 { margin-top: 6px !important; }
+            .py-1\.5, .py-2, .py-1 { padding-top: 1px !important; padding-bottom: 1px !important; }
             .bg-gray-50, .bg-gray-100, .bg-gray-200, .bg-slate-50, .bg-slate-100 { background-color: transparent !important; }
             
-            .door-slip-box h2 { font-size: 18pt !important; }
-            .door-slip-box .room-giant { font-size: 26pt !important; }
-            .door-slip-box .reg-giant { font-size: 12pt !important; line-height: 1.4 !important; }
+            .door-slip-box h2 { font-size: 16pt !important; }
+            .door-slip-box .room-giant { font-size: 22pt !important; }
+            .door-slip-box .reg-giant { font-size: 11pt !important; line-height: 1.3 !important; }
         }
         
         .cambria-font { font-family: Cambria, Georgia, serif; }
-        .table-bordered th, .table-bordered td { border: 1.5px solid #1e293b; padding: 6px 10px; }
+        .table-bordered th, .table-bordered td { border: 1.5px solid #1e293b; padding: 5px 8px; }
         .table-bordered { border-collapse: collapse; width: 100%; }
         
         .pro-card {
@@ -81,7 +82,7 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="font-extrabold text-base sm:text-lg tracking-tight text-white">UniExam SeatPro</span>
-                        <span class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">v7 Multi-Session</span>
+                        <span class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">v7.1 Single-Page Fit</span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
                         <span>Automated University Examination Suite</span>
@@ -101,7 +102,6 @@
         
         <div class="no-print bg-white rounded-2xl p-6 sm:p-8 mb-6 shadow-sm border border-slate-200/80">
             
-            <!-- Header & Session Switcher Toggle Bar -->
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-100">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Examination Seating & Attendance</h1>
@@ -109,7 +109,6 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
-                    <!-- Session Switcher Pill -->
                     <div class="bg-slate-100 p-1.5 rounded-2xl flex items-center border border-slate-200 shadow-inner">
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3">Session:</span>
                         <button onclick="switchActiveSession('FN')" id="sessionBtnFN" class="px-4 py-2 rounded-xl font-extrabold text-xs tracking-wider transition-all shadow-sm bg-white text-slate-800">FN (Forenoon)</button>
@@ -123,7 +122,6 @@
                 </div>
             </div>
 
-            <!-- Institution Bar -->
             <div class="mb-6 bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center gap-3">
                 <div class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider px-2">
                     <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
@@ -132,7 +130,6 @@
                 <input type="text" id="collegeName" placeholder="Auto-detected from PDF or type College Name here..." oninput="saveToStorage(); if(masterData.length) showTab(activeTab);" class="w-full text-sm font-bold text-slate-800 bg-white border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
-            <!-- 4-Column Settings Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
                 <div class="pro-card p-5 rounded-xl">
                     <div class="flex items-center gap-2 mb-3.5 text-blue-600">
@@ -233,7 +230,6 @@
                 </div>
             </div>
 
-            <!-- Quick Student Search Bar -->
             <div id="studentFinderBox" class="hidden mb-6 bg-slate-900 text-white p-4 rounded-xl shadow-md">
                 <div class="flex flex-col md:flex-row items-center gap-3">
                     <div class="flex items-center gap-2 text-blue-400 font-bold text-xs uppercase tracking-wider min-w-fit">
@@ -245,10 +241,8 @@
                 </div>
             </div>
 
-            <!-- File Status & Breakdown -->
             <div id="fileStatusBox" class="hidden mb-6 p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 text-sm text-emerald-900"></div>
 
-            <!-- Navigation Pills -->
             <div class="flex flex-wrap gap-2 justify-center pt-2" id="tabsContainer" style="display: none;">
                 <button onclick="showTab('rooms')" id="tab-rooms" class="tab-btn active px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 text-slate-600 hover:bg-slate-200">1. Assign Rooms</button>
                 <button onclick="showTab('seating')" id="tab-seating" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 text-slate-600 hover:bg-slate-200">2. Seating Plan</button>
@@ -259,7 +253,6 @@
             </div>
         </div>
 
-        <!-- Action Print Bar -->
         <div class="no-print flex flex-wrap items-center justify-between gap-4 bg-white px-6 py-4 rounded-2xl shadow-sm mb-6 border border-slate-200/80" id="printContainer" style="display: none;">
             <div class="flex items-center gap-3">
                 <div class="bg-blue-50 text-blue-600 p-2.5 rounded-xl">
@@ -286,7 +279,6 @@
             </div>
         </div>
 
-        <!-- Document Preview Canvas -->
         <div id="printableArea" class="bg-white p-6 sm:p-10 rounded-2xl shadow-sm cambria-font text-black border border-slate-200/80 min-h-[480px]">
             <div class="flex flex-col items-center justify-center h-full text-slate-400 py-20 no-print font-sans">
                 <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 text-slate-400">
@@ -307,7 +299,7 @@
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
 
-        let currentSession = 'FN'; // 'FN' or 'AN'
+        let currentSession = 'FN';
         let sessionsData = {
             'FN': { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [] },
             'AN': { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [] }
@@ -329,11 +321,9 @@
         });
 
         function switchActiveSession(sessionName) {
-            // Save current state first
             saveCurrentSessionState();
             currentSession = sessionName;
 
-            // Update UI buttons
             const btnFN = document.getElementById('sessionBtnFN');
             const btnAN = document.getElementById('sessionBtnAN');
             if (currentSession === 'FN') {
@@ -346,7 +336,6 @@
                 document.getElementById('examSession').value = "AN";
             }
 
-            // Load new session state
             loadSessionState(currentSession);
             saveToStorage();
         }
@@ -431,7 +420,7 @@
                     currentSession,
                     sessionsData
                 };
-                localStorage.setItem('examSeatingAppState_v7', JSON.stringify(state));
+                localStorage.setItem('examSeatingAppState_v7.1', JSON.stringify(state));
                 const badge = document.getElementById('autoSaveBadge');
                 if (badge) badge.classList.remove('hidden');
             } catch (e) {
@@ -441,7 +430,7 @@
 
         function loadFromStorage() {
             try {
-                const raw = localStorage.getItem('examSeatingAppState_v7');
+                const raw = localStorage.getItem('examSeatingAppState_v7.1');
                 if (!raw) return;
                 const state = JSON.parse(raw);
                 if (state.collegeName !== undefined) document.getElementById('collegeName').value = state.collegeName;
@@ -1333,26 +1322,26 @@
                     const sortedSubjEntries = Object.entries(subjCounts).sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }));
 
                     html += `
-                        <div class="page-break-hall mb-8 pb-6 border-b border-gray-200 last:border-b-0 print:border-none print:mb-0 print:pb-0">
+                        <div class="page-break-hall avoid-break mb-4 pb-4 border-b border-gray-200 last:border-b-0 print:border-none print:mb-0 print:pb-0">
                             ${colHeader}
-                            <h2 class="text-xl font-bold mb-4 uppercase tracking-wide text-center print:text-base print:mb-1">[${currentSession}] EXAM DETAILS - TO: INVIGILATOR</h2>
+                            <h2 class="text-base font-bold mb-2 uppercase tracking-wide text-center print:text-sm print:mb-1">[${currentSession}] EXAM DETAILS - TO: INVIGILATOR</h2>
                             
-                            <table class="table-bordered w-full mb-5 text-sm font-bold bg-gray-50 print:mb-2 print:text-xs">
-                                <tr><td class="w-1/4 py-1.5 px-3">Name of Invigilator</td><td class="py-1.5 px-3">${hall.invigilator || ''}</td></tr>
-                                <tr><td class="w-1/4 py-1.5 px-3">Room Assigned</td><td class="py-1.5 px-3 text-lg print:text-sm">${hall.room}</td></tr>
-                                <tr><td class="w-1/4 py-1.5 px-3">Hall No:</td><td class="py-1.5 px-3">${hall.hallNo}</td></tr>
-                                <tr><td class="w-1/4 py-1.5 px-3">No of Students</td><td class="py-1.5 px-3">${hall.students.length}</td></tr>
-                                <tr><td class="w-1/4 py-1.5 px-3">Exam Type</td><td class="py-1.5 px-3">${getHallType(hall)}</td></tr>
-                                <tr><td class="w-1/4 py-1.5 px-3">Exam Date & Session</td><td class="py-1.5 px-3">${dateStr}</td></tr>
+                            <table class="table-bordered w-full mb-3 text-xs font-bold bg-gray-50 print:mb-1.5 print:text-[8pt]">
+                                <tr><td class="w-1/4 py-1 px-2">Name of Invigilator</td><td class="py-1 px-2">${hall.invigilator || ''}</td></tr>
+                                <tr><td class="w-1/4 py-1 px-2">Room Assigned</td><td class="py-1 px-2 font-extrabold">${hall.room}</td></tr>
+                                <tr><td class="w-1/4 py-1 px-2">Hall No:</td><td class="py-1 px-2">${hall.hallNo}</td></tr>
+                                <tr><td class="w-1/4 py-1 px-2">No of Students</td><td class="py-1 px-2">${hall.students.length}</td></tr>
+                                <tr><td class="w-1/4 py-1 px-2">Exam Type</td><td class="py-1 px-2">${getHallType(hall)}</td></tr>
+                                <tr><td class="w-1/4 py-1 px-2">Exam Date & Session</td><td class="py-1 px-2">${dateStr}</td></tr>
                             </table>
 
-                            <div class="font-bold mb-2 text-xs uppercase tracking-wider bg-gray-200 py-1 px-2 rounded-t print:bg-transparent print:mb-1 print:p-0">SUBJECTS AND QUESTION PAPER COUNT (A-Z)</div>
-                            <table class="table-bordered mb-5 text-xs font-bold print:mb-2">
+                            <div class="font-bold mb-1 text-[10px] uppercase tracking-wider bg-gray-200 py-0.5 px-2 rounded-t print:bg-transparent print:mb-0.5 print:p-0">SUBJECTS AND QUESTION PAPER COUNT (A-Z)</div>
+                            <table class="table-bordered mb-3 text-[10px] font-bold print:mb-1.5">
                                 <thead>
                                     <tr class="bg-gray-100 print:bg-transparent">
-                                        <th class="w-10 text-center py-1.5">SL</th>
-                                        <th class="text-left py-1.5">NAME OF SUBJECT</th>
-                                        <th class="w-16 text-center py-1.5">COUNT</th>
+                                        <th class="w-8 text-center py-1">SL</th>
+                                        <th class="text-left py-1">NAME OF SUBJECT</th>
+                                        <th class="w-12 text-center py-1">COUNT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1361,9 +1350,9 @@
                     for (let [subj, count] of sortedSubjEntries) {
                         html += `
                             <tr>
-                                <td class="text-center py-1.5">${sl++}</td>
-                                <td class="py-1.5">${subj}</td>
-                                <td class="text-center py-1.5 text-base print:text-xs">${count}</td>
+                                <td class="text-center py-1">${sl++}</td>
+                                <td class="py-1">${subj}</td>
+                                <td class="text-center py-1 font-extrabold">${count}</td>
                             </tr>
                         `;
                     }
@@ -1371,14 +1360,14 @@
                                 </tbody>
                             </table>
 
-                            <div class="font-bold mb-2 text-xs uppercase tracking-wider bg-gray-200 py-1 px-2 rounded-t print:bg-transparent print:mb-1 print:p-0">STUDENTS LIST</div>
-                            <table class="table-bordered text-xs font-bold print:mb-1">
+                            <div class="font-bold mb-1 text-[10px] uppercase tracking-wider bg-gray-200 py-0.5 px-2 rounded-t print:bg-transparent print:mb-0.5 print:p-0">STUDENTS LIST</div>
+                            <table class="table-bordered text-[10px] font-bold print:mb-1">
                                 <thead>
                                     <tr class="bg-gray-100 print:bg-transparent">
-                                        <th class="w-16 text-center py-1.5">RNBB</th>
-                                        <th class="w-32 text-left py-1.5">REG NO</th>
-                                        <th class="text-left py-1.5">SUBJECT NAME</th>
-                                        <th class="w-28 text-left py-1.5">REMARKS</th>
+                                        <th class="w-14 text-center py-1">RNBB</th>
+                                        <th class="w-28 text-left py-1">REG NO</th>
+                                        <th class="text-left py-1">SUBJECT NAME</th>
+                                        <th class="w-20 text-left py-1">REMARKS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1389,18 +1378,18 @@
                         currentSubj = s.subject;
                         html += `
                             <tr class="hover:bg-gray-50 print:bg-transparent">
-                                <td class="text-center py-1.5 text-gray-500">RNBB${sIdx + 1}</td>
-                                <td class="py-1.5 text-sm print:text-xs">${s.regNo}</td>
-                                <td class="py-1.5 text-gray-700">${printSubj}</td>
-                                <td class="py-1.5"></td>
+                                <td class="text-center py-1 text-gray-500">RNBB${sIdx + 1}</td>
+                                <td class="py-1 font-bold">${s.regNo}</td>
+                                <td class="py-1 text-gray-700">${printSubj}</td>
+                                <td class="py-1"></td>
                             </tr>
                         `;
                     });
                     html += `
                                 </tbody>
                             </table>
-                            <div class="mt-10 font-bold text-right mr-10 text-base flex justify-end print:mt-4 print:mr-4">
-                                <div class="border-t-2 border-dashed border-gray-600 pt-2 w-48 text-center print:text-sm print:w-32">Signature</div>
+                            <div class="mt-4 font-bold text-right mr-6 text-xs flex justify-end print:mt-2 print:mr-2">
+                                <div class="border-t-2 border-dashed border-gray-600 pt-1 w-40 text-center print:text-xs print:w-28">Signature</div>
                             </div>
                         </div>
                     `;
@@ -1552,27 +1541,27 @@
                 <head>
                     <title>${fileName}</title>
                     <style>
-                        body { font-family: Cambria, Georgia, serif; color: #000; padding: 5mm; font-size: 8.5pt; line-height: 1.15;}
+                        body { font-family: Cambria, Georgia, serif; color: #000; padding: 5mm; font-size: 8pt; line-height: 1.1;}
                         .no-print { display: none !important; }
-                        .table-bordered th, .table-bordered td { border: 1px solid #000; padding: 3.5px 5px !important; font-size: 8.5pt !important;}
+                        .table-bordered th, .table-bordered td { border: 1px solid #000; padding: 2.5px 4px !important; font-size: 8pt !important;}
                         .table-bordered { border-collapse: collapse; width: 100%; text-align: left;}
                         .text-center { text-align: center; } .text-right { text-align: right; }
-                        .font-bold, .font-extrabold { font-weight: bold; } .text-sm, .text-xs, .text-base, .text-lg, .text-xl, .text-2xl { font-size: 8.5pt !important; }
+                        .font-bold, .font-extrabold { font-weight: bold; } .text-sm, .text-xs, .text-base, .text-lg, .text-xl, .text-2xl { font-size: 8pt !important; }
                         .uppercase { text-transform: uppercase; } .underline { text-decoration: underline; }
-                        .mb-2, .mb-3, .mb-4, .mb-5, .mb-6, .mb-8 { margin-bottom: 4px !important; } 
+                        .mb-2, .mb-3, .mb-4, .mb-5, .mb-6, .mb-8 { margin-bottom: 3px !important; } 
                         .pb-6 { padding-bottom: 0 !important; }
-                        .mt-1 { margin-top: 0.25rem; } .mt-8, .mt-10 { margin-top: 12px !important; }
-                        .py-1, .py-1\\.5, .py-2 { padding-top: 2px !important; padding-bottom: 2px !important; } 
-                        .px-3, .px-4, .pl-4 { padding-left: 4px !important; padding-right: 4px !important; }
+                        .mt-1 { margin-top: 0.25rem; } .mt-8, .mt-10 { margin-top: 8px !important; }
+                        .py-1, .py-1\\.5, .py-2 { padding-top: 1.5px !important; padding-bottom: 1.5px !important; } 
+                        .px-3, .px-4, .pl-4 { padding-left: 3px !important; padding-right: 3px !important; }
                         .bg-gray-50, .bg-gray-100, .bg-gray-200 { background-color: transparent !important; }
                         .flex { display: flex; } .justify-between { justify-content: space-between; } .items-center { align-items: center; }
-                        .avoid-break { page-break-inside: avoid; margin-bottom: 6px !important; }
+                        .avoid-break { page-break-inside: avoid; margin-bottom: 4px !important; }
                         .page-break-hall, .page-break-paper { page-break-before: always; margin-bottom: 0 !important; padding-bottom: 0 !important; border: none !important; }
                         .page-break-hall:first-child, .page-break-paper:first-child { page-break-before: avoid; }
-                        h2 { font-size: 11pt !important; margin-bottom: 3px !important; margin-top: 0 !important; }
-                        h3.college-header { font-size: 12pt !important; margin-bottom: 2px !important; margin-top: 0 !important; text-align: center; }
+                        h2 { font-size: 10pt !important; margin-bottom: 2px !important; margin-top: 0 !important; }
+                        h3.college-header { font-size: 11pt !important; margin-bottom: 2px !important; margin-top: 0 !important; text-align: center; }
                         .door-slip-box { border: 2px solid #000; padding: 10px; margin-bottom: 12px !important; }
-                        @page { size: A4 ${orient}; margin: 5mm; }
+                        @page { size: A4 portrait; margin: 4mm; }
                     </style>
                 </head>
                 <body onload="setTimeout(() => { window.print(); }, 500)">
