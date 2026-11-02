@@ -81,7 +81,7 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="font-extrabold text-base sm:text-lg tracking-tight text-white">UniExam SeatPro</span>
-                        <span class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">v7.5 Door Bench Seating</span>
+                        <span class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">v7.6 Sorted Summary</span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
                         <span>Automated University Examination Suite</span>
@@ -104,7 +104,7 @@
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-100">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Examination Seating & Attendance</h1>
-                    <p class="text-slate-500 text-sm font-medium mt-0.5">Manage FN & AN sessions independently with door slip bench numbers</p>
+                    <p class="text-slate-500 text-sm font-medium mt-0.5">Manage FN & AN sessions independently with sorted summary views</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
@@ -419,7 +419,7 @@
                     currentSession,
                     sessionsData
                 };
-                localStorage.setItem('examSeatingAppState_v7.5', JSON.stringify(state));
+                localStorage.setItem('examSeatingAppState_v7.6', JSON.stringify(state));
                 const badge = document.getElementById('autoSaveBadge');
                 if (badge) badge.classList.remove('hidden');
             } catch (e) {
@@ -429,7 +429,7 @@
 
         function loadFromStorage() {
             try {
-                const raw = localStorage.getItem('examSeatingAppState_v7.5');
+                const raw = localStorage.getItem('examSeatingAppState_v7.6');
                 if (!raw) return;
                 const state = JSON.parse(raw);
                 if (state.collegeName !== undefined) document.getElementById('collegeName').value = state.collegeName;
@@ -529,15 +529,24 @@
         }
 
         function getSortedQuestionPapers() {
-            const subjSummary = {};
+            const regQPs = [];
+            const sdeQPs = [];
+
             masterData.forEach(s => {
-                const key = s.subject + "||" + s.type;
-                if (!subjSummary[key]) subjSummary[key] = { subject: s.subject, type: s.type, count: 0 };
-                subjSummary[key].count++;
+                const targetList = s.type === 'SDE' ? sdeQPs : regQPs;
+                let existing = targetList.find(item => item.subject === s.subject && item.type === s.type);
+                if (existing) {
+                    existing.count++;
+                } else {
+                    targetList.push({ subject: s.subject, type: s.type, count: 1 });
+                }
             });
-            return Object.values(subjSummary).sort((a, b) => 
-                a.subject.localeCompare(b.subject, undefined, { numeric: true, sensitivity: 'base' })
-            );
+
+            const sortFn = (a, b) => a.subject.localeCompare(b.subject, undefined, { numeric: true, sensitivity: 'base' });
+            regQPs.sort(sortFn);
+            sdeQPs.sort(sortFn);
+
+            return [...regQPs, ...sdeQPs];
         }
 
         function toggleBarcodeMode() {
@@ -989,7 +998,7 @@
                 </head>
                 <body onload="setTimeout(() => { window.print(); }, 400)">
                     ${colHeader}
-                    <h2>[${currentSession}] QUESTION PAPERS TO BE PRINTED (A-Z)</h2>
+                    <h2>[${currentSession}] QUESTION PAPERS TO BE PRINTED (REG FIRST, SDE AFTER)</h2>
                     <p>Date of Exam : ${dateStr} &nbsp;|&nbsp; Total Strength : ${totalQP}</p>
                     <table class="table-bordered">
                         <thead>
@@ -1240,7 +1249,7 @@
 
                 html += `
                     <div class="flex flex-wrap items-center justify-between mb-2 mt-4 gap-2">
-                        <div class="font-bold text-sm underline uppercase tracking-wider">QUESTION PAPERS TO BE PRINTED (ALPHABETICAL ORDER)</div>
+                        <div class="font-bold text-sm underline uppercase tracking-wider">QUESTION PAPERS TO BE PRINTED (REGULAR FIRST, SDE AFTER)</div>
                         <div class="no-print flex gap-2 font-sans">
                             <button onclick="printQuestionPapersOnly()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1 transition-colors">
                                 Download QP PDF
@@ -1398,10 +1407,9 @@
             else if (tabName === 'doorslips') {
                 hallAllocations.forEach((hall) => {
                     const bySubj = {};
-                    hall.students.forEach((s, sIdx) => {
-                        const seatLabel = `Seat ${sIdx + 1}`;
+                    hall.students.forEach(s => {
                         if (!bySubj[s.subject]) bySubj[s.subject] = [];
-                        bySubj[s.subject].push(`${s.regNo} [${seatLabel}]`);
+                        bySubj[s.subject].push(s.regNo);
                     });
 
                     html += `
@@ -1419,11 +1427,11 @@
                             </div>
                             <div class="space-y-4">
                     `;
-                    for (let [subj, items] of Object.entries(bySubj)) {
+                    for (let [subj, regs] of Object.entries(bySubj)) {
                         html += `
                             <div class="border-b border-gray-300 pb-3 last:border-none">
-                                <div class="text-sm font-bold underline uppercase text-gray-800 mb-1">${subj} — [${items.length} Students]</div>
-                                <div class="reg-giant text-sm font-bold text-black leading-relaxed">${items.join(', ')}</div>
+                                <div class="text-sm font-bold underline uppercase text-gray-800 mb-1">${subj} — [${regs.length} Students]</div>
+                                <div class="reg-giant text-base font-bold text-black leading-relaxed">${formatRegList(regs)}</div>
                             </div>
                         `;
                     }
