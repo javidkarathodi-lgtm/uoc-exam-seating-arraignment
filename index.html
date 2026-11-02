@@ -34,7 +34,7 @@
             
             .door-slip-box h2 { font-size: 16pt !important; }
             .door-slip-box .room-giant { font-size: 22pt !important; }
-            .door-slip-box .reg-giant { font-size: 11pt !important; line-height: 1.3 !important; }
+            .door-slip-box .reg-giant { font-size: 10.5pt !important; line-height: 1.35 !important; }
         }
         
         .cambria-font { font-family: Cambria, Georgia, serif; }
@@ -81,7 +81,7 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="font-extrabold text-base sm:text-lg tracking-tight text-white">UniExam SeatPro</span>
-                        <span class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">v7.7 Reg-First Summary</span>
+                        <span class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">v7.9 Door Slip Seats</span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
                         <span>Automated University Examination Suite</span>
@@ -104,7 +104,7 @@
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-100">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Examination Seating & Attendance</h1>
-                    <p class="text-slate-500 text-sm font-medium mt-0.5">Manage FN & AN sessions independently with sorted summary views</p>
+                    <p class="text-slate-500 text-sm font-medium mt-0.5">Manage FN & AN sessions independently with door slip seat numbers</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
@@ -419,7 +419,7 @@
                     currentSession,
                     sessionsData
                 };
-                localStorage.setItem('examSeatingAppState_v7.7', JSON.stringify(state));
+                localStorage.setItem('examSeatingAppState_v7.9', JSON.stringify(state));
                 const badge = document.getElementById('autoSaveBadge');
                 if (badge) badge.classList.remove('hidden');
             } catch (e) {
@@ -429,7 +429,7 @@
 
         function loadFromStorage() {
             try {
-                const raw = localStorage.getItem('examSeatingAppState_v7.7');
+                const raw = localStorage.getItem('examSeatingAppState_v7.9');
                 if (!raw) return;
                 const state = JSON.parse(raw);
                 if (state.collegeName !== undefined) document.getElementById('collegeName').value = state.collegeName;
@@ -506,9 +506,9 @@
                 resBox.innerHTML = `<span class="text-red-400">No student found in ${currentSession} matching "${q}"</span>`;
             } else if (matches.length === 1) {
                 const m = matches[0];
-                resBox.innerHTML = `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-lg inline-block"><b>[${currentSession}] ${m.regNo} ${m.name ? `- ${m.name}` : ''}</b> &rarr; <b>Room ${m.room} (Hall ${m.hallNo})</b></span>`;
+                resBox.innerHTML = `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-lg inline-block"><b>[${currentSession}] ${m.regNo} ${m.name ? `- ${m.name}` : ''}</b> &rarr; <b>Room ${m.room} (Seat ${m.seat})</b></span>`;
             } else {
-                const preview = matches.slice(0, 3).map(m => `<b>${m.regNo}</b> ${m.name ? `(${m.name})` : ''} [Room ${m.room}]`).join(' | ');
+                const preview = matches.slice(0, 3).map(m => `<b>${m.regNo}</b> ${m.name ? `(${m.name})` : ''} [Room ${m.room}, Seat ${m.seat}]`).join(' | ');
                 resBox.innerHTML = `<span class="text-blue-200">${ preview } ${matches.length > 3 ? `... +${matches.length - 3} more` : ''}</span>`;
             }
         }
@@ -920,10 +920,12 @@
         }
 
         function updateRoomField(hallIndex, field, val) {
-            hallAllocations[hallIndex][field] = val.trim();
-            if(field === 'room') {
+            const cleanVal = val.trim();
+            hallAllocations[hallIndex][field] = cleanVal;
+
+            if (field === 'room') {
                 const label = document.getElementById(`roomHeaderLabel_${hallIndex}`);
-                if (label) label.textContent = val.trim() || "____";
+                if (label) label.textContent = cleanVal || "____";
             }
             saveToStorage();
         }
@@ -1044,7 +1046,25 @@
             if (tabName === 'rooms') {
                 const allSubjects = [...new Set(masterData.map(s => s.subject))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
-                html += `<div class="font-sans no-print">
+                const roomCounts = {};
+                hallAllocations.forEach(h => {
+                    const r = (h.room || "").trim().toUpperCase();
+                    if (r) roomCounts[r] = (roomCounts[r] || 0) + 1;
+                });
+                let duplicateRooms = Object.keys(roomCounts).filter(r => roomCounts[r] > 1);
+
+                html += `<div class="font-sans no-print">`;
+                if (duplicateRooms.length > 0) {
+                    html += `
+                        <div class="mb-5 bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl flex items-center gap-3 shadow-sm">
+                            <svg class="w-6 h-6 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <div class="text-xs font-bold">
+                                <b>Warning:</b> Duplicate Room Number(s) detected: <span class="underline">${duplicateRooms.join(', ')}</span>. Please assign unique room numbers for each hall!
+                            </div>
+                        </div>`;
+                }
+
+                html += `
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 border-b border-slate-200 pb-4">
                         <div class="flex items-center gap-2.5">
                             <div class="bg-blue-600 text-white p-2 rounded-xl shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
@@ -1064,9 +1084,11 @@
 
                     const hType = getHallType(hall);
                     const badgeColor = hType === 'SDE' ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-blue-100 text-blue-800 border-blue-200';
+                    const currentRoomUpper = (hall.room || "").trim().toUpperCase();
+                    const isDup = currentRoomUpper && roomCounts[currentRoomUpper] > 1;
 
                     html += `
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-5 items-start bg-slate-50/70 p-5 rounded-2xl border border-slate-200/90 hover:border-slate-300 transition-all">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-5 items-start ${isDup ? 'bg-red-50/50 border-red-300' : 'bg-slate-50/70 border-slate-200/90'} p-5 rounded-2xl border transition-all">
                             <div class="lg:col-span-3 space-y-3 bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
                                 <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                                     <span class="font-extrabold text-slate-800">Hall #${hall.hallNo}</span>
@@ -1074,9 +1096,9 @@
                                 </div>
                                 <div class="grid grid-cols-3 gap-2">
                                     <div class="col-span-2">
-                                        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Room No</label>
-                                        <input type="text" class="w-full border border-slate-300 rounded-lg p-2 font-bold text-sm text-slate-800 focus:border-blue-500 outline-none" 
-                                            placeholder="e.g. 201" value="${hall.room}" oninput="updateRoomField(${idx}, 'room', this.value)">
+                                        <label class="text-[10px] font-bold ${isDup ? 'text-red-600' : 'text-slate-400'} uppercase block mb-1">Room No ${isDup ? '⚠️ (Duplicate)' : ''}</label>
+                                        <input type="text" class="w-full border ${isDup ? 'border-red-500 bg-red-50 text-red-900 font-extrabold' : 'border-slate-300 text-slate-800 font-bold'} rounded-lg p-2 text-sm focus:border-blue-500 outline-none" 
+                                            placeholder="e.g. 201" value="${hall.room}" oninput="updateRoomField(${idx}, 'room', this.value); showTab('rooms');">
                                     </div>
                                     <div>
                                         <label class="text-[10px] font-bold text-amber-600 uppercase block mb-1" title="Custom seat limit">Max Cap</label>
@@ -1407,9 +1429,10 @@
             else if (tabName === 'doorslips') {
                 hallAllocations.forEach((hall) => {
                     const bySubj = {};
-                    hall.students.forEach(s => {
+                    hall.students.forEach((s, idx) => {
+                        const seatLabel = `Seat ${idx + 1}`;
                         if (!bySubj[s.subject]) bySubj[s.subject] = [];
-                        bySubj[s.subject].push(s.regNo);
+                        bySubj[s.subject].push(`${s.regNo} [${seatLabel}]`);
                     });
 
                     html += `
@@ -1427,11 +1450,11 @@
                             </div>
                             <div class="space-y-4">
                     `;
-                    for (let [subj, regs] of Object.entries(bySubj)) {
+                    for (let [subj, items] of Object.entries(bySubj)) {
                         html += `
                             <div class="border-b border-gray-300 pb-3 last:border-none">
-                                <div class="text-sm font-bold underline uppercase text-gray-800 mb-1">${subj} — [${regs.length} Students]</div>
-                                <div class="reg-giant text-base font-bold text-black leading-relaxed">${formatRegList(regs)}</div>
+                                <div class="text-sm font-bold underline uppercase text-gray-800 mb-1">${subj} — [${items.length} Students]</div>
+                                <div class="reg-giant text-sm font-bold text-black leading-relaxed">${items.join(', ')}</div>
                             </div>
                         `;
                     }
