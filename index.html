@@ -7,30 +7,30 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
         body { 
-            font-family: 'Poppins', sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
         }
         
         @media print {
             .no-print { display: none !important; }
-            body { background-color: white !important; margin: 0; padding: 0; font-size: 9pt !important; line-height: 1.2 !important;}
+            body { background-color: white !important; margin: 0; padding: 0; font-size: 9pt !important; line-height: 1.2 !important; color: #000 !important;}
             #printableArea { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
             .avoid-break { page-break-inside: avoid; margin-bottom: 0px !important; }
             .page-break-hall, .page-break-paper { page-break-before: always; margin-bottom: 0 !important; padding-bottom: 0 !important; border: none !important;}
             .page-break-hall:first-child, .page-break-paper:first-child { page-break-before: avoid; }
             @page { margin: 5mm; }
             
-            .table-bordered th, .table-bordered td { padding: 3px 5px !important; border-width: 1px !important; font-size: 8.5pt !important; }
-            h2 { margin-bottom: 3px !important; font-size: 11pt !important; margin-top: 0 !important;}
-            h3.college-header { font-size: 12pt !important; margin-bottom: 2px !important; }
+            .table-bordered th, .table-bordered td { padding: 3.5px 6px !important; border: 1px solid #000 !important; font-size: 8.5pt !important; color: #000 !important; }
+            h2 { margin-bottom: 3px !important; font-size: 11pt !important; margin-top: 0 !important; color: #000 !important;}
+            h3.college-header { font-size: 12pt !important; margin-bottom: 2px !important; color: #000 !important;}
             .mb-8, .mb-6, .mb-5, .mb-4, .mb-3, .mb-2 { margin-bottom: 3px !important; }
             .mt-10, .mt-8 { margin-top: 12px !important; }
             .py-1\.5, .py-2, .py-1 { padding-top: 2px !important; padding-bottom: 2px !important; }
-            .bg-gray-50, .bg-gray-100, .bg-gray-200 { background-color: transparent !important; }
+            .bg-gray-50, .bg-gray-100, .bg-gray-200, .bg-slate-50, .bg-slate-100 { background-color: transparent !important; }
             
             .door-slip-box h2 { font-size: 18pt !important; }
             .door-slip-box .room-giant { font-size: 26pt !important; }
@@ -38,87 +38,110 @@
         }
         
         .cambria-font { font-family: Cambria, Georgia, serif; }
-        .table-bordered th, .table-bordered td { border: 1.5px solid #2d3748; padding: 5px 8px; }
+        .table-bordered th, .table-bordered td { border: 1.5px solid #1e293b; padding: 6px 10px; }
         .table-bordered { border-collapse: collapse; width: 100%; }
         
-        .glassmorphism {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        .pro-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.04), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+            transition: all 0.2s ease;
         }
-
-        .gradient-text {
-            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .pro-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.06), 0 4px 6px -4px rgba(15, 23, 42, 0.06);
         }
         
         .custom-file-upload {
-            border: 2px dashed #cbd5e1;
-            display: inline-block;
-            padding: 12px;
+            border: 2px dashed #94a3b8;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
             background: #f8fafc;
         }
         .custom-file-upload:hover {
-            border-color: #3b82f6;
+            border-color: #2563eb;
             background: #eff6ff;
         }
-        .tab-btn.active { background-color: #1f2937; color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+
+        .tab-btn {
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        .tab-btn.active { 
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #ffffff; 
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+        }
     </style>
 </head>
-<body class="min-h-screen pb-10">
+<body class="min-h-screen pb-12">
     
-    <header class="no-print bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+    <!-- Top Executive Navigation Bar -->
+    <header class="no-print bg-slate-900 text-white shadow-lg sticky top-0 z-50 border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex justify-between items-center">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                 </div>
                 <div>
-                    <div class="font-bold text-lg text-gray-800 leading-tight">Exam Seating System</div>
-                    <div id="autoSaveBadge" class="text-[10px] text-emerald-600 font-semibold hidden">● Auto-Saved in Browser</div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-extrabold text-base sm:text-lg tracking-tight text-white">UniExam SeatPro</span>
+                        <span class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Enterprise</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-slate-400">
+                        <span>Automated University Examination Suite</span>
+                        <span id="autoSaveBadge" class="text-emerald-400 font-semibold hidden">● Saved</span>
+                    </div>
                 </div>
             </div>
             
-            <a href="https://in.linkedin.com/in/javidkarathodi" target="_blank" class="flex items-center gap-2 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 border border-blue-200 px-4 py-1.5 rounded-full transition-all duration-300 shadow-sm hover:shadow">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                JAVID KARATHODI
+            <a href="https://in.linkedin.com/in/javidkarathodi" target="_blank" class="flex items-center gap-2 text-xs sm:text-sm font-semibold text-white bg-slate-800 hover:bg-blue-600 border border-slate-700 hover:border-blue-500 px-4 py-2 rounded-xl transition-all duration-200 shadow-sm">
+                <svg class="w-4 h-4 text-blue-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                <span>JAVID KARATHODI</span>
             </a>
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto p-4 mt-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
         
-        <div class="no-print glassmorphism rounded-2xl p-6 md:p-8 mb-8">
-            <div class="text-center mb-6">
-                <h1 class="text-2xl md:text-4xl font-bold tracking-tight mb-2 gradient-text">Examination Seating Arrangement</h1>
-                <p class="text-gray-500 font-medium text-sm md:text-base">Automated Room Allocation System (Regular / SDE / PG / FYUG)</p>
-                
-                <div class="max-w-xl mx-auto mt-4 flex flex-col sm:flex-row items-center gap-2 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
-                    <span class="text-xs font-bold text-gray-400 uppercase px-2">Institution:</span>
-                    <input type="text" id="collegeName" placeholder="Enter College Name (Optional - Appears on Printouts)" oninput="saveToStorage(); if(masterData.length) showTab(activeTab);" class="w-full text-sm font-semibold text-gray-800 focus:outline-none px-2 py-1 bg-transparent text-center sm:text-left">
+        <!-- Main Control Dashboard -->
+        <div class="no-print bg-white rounded-2xl p-6 sm:p-8 mb-6 shadow-sm border border-slate-200/80">
+            
+            <!-- Top Banner & College Input -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-100">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Examination Seating & Attendance</h1>
+                    <p class="text-slate-500 text-sm font-medium mt-0.5">Instant room allocation, invigilator mapping & nominal roll generator (CBCSS / FYUG / PG / SDE)</p>
                 </div>
 
-                <div class="mt-4 flex flex-wrap justify-center gap-3">
-                    <button id="barcodeToggleBtn" onclick="toggleBarcodeMode()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-5 py-2 rounded-full font-semibold text-xs uppercase tracking-wide shadow-md transition-all transform hover:scale-105">
-                        <span class="flex items-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Switch to Barcode Exam</span>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <button id="barcodeToggleBtn" onclick="toggleBarcodeMode()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-semibold text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Switch to Barcode Exam
                     </button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex items-center gap-2 mb-3 text-blue-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        <h3 class="font-semibold">Exam Details</h3>
+            <!-- Institution Bar -->
+            <div class="mb-6 bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center gap-3">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider px-2">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    College / Centre:
+                </div>
+                <input type="text" id="collegeName" placeholder="Auto-detected from PDF or type College Name here..." oninput="saveToStorage(); if(masterData.length) showTab(activeTab);" class="w-full text-sm font-bold text-slate-800 bg-white border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- 4-Column Settings Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+                <div class="pro-card p-5 rounded-xl">
+                    <div class="flex items-center gap-2 mb-3.5 text-blue-600">
+                        <div class="p-1.5 bg-blue-50 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
+                        <h3 class="font-bold text-sm text-slate-800">Exam Details</h3>
                     </div>
                     <div class="space-y-3">
                         <div>
-                            <label class="text-xs text-gray-500 font-semibold uppercase">Semester</label>
-                            <select id="examName" onchange="saveToStorage()" class="w-full border-b-2 border-gray-200 py-1 focus:border-blue-500 focus:outline-none bg-transparent font-medium">
+                            <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Semester</label>
+                            <select id="examName" onchange="saveToStorage(); if(masterData.length) showTab(activeTab);" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm focus:border-blue-500 focus:outline-none bg-slate-50 font-semibold text-slate-700">
                                 <option>First Sem</option>
                                 <option>Second Sem</option>
                                 <option>Third Sem</option>
@@ -130,8 +153,8 @@
                             </select>
                         </div>
                         <div>
-                            <label class="text-xs text-gray-500 font-semibold uppercase">Default Scheme</label>
-                            <select id="scheme" onchange="saveToStorage()" class="w-full border-b-2 border-gray-200 py-1 focus:border-blue-500 focus:outline-none bg-transparent font-medium">
+                            <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Default Scheme</label>
+                            <select id="scheme" onchange="saveToStorage()" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm focus:border-blue-500 focus:outline-none bg-slate-50 font-semibold text-slate-700">
                                 <option>FYUG</option>
                                 <option selected>CBCSS</option>
                                 <option>SDE CBCSS</option>
@@ -141,33 +164,33 @@
                     </div>
                 </div>
 
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex items-center gap-2 mb-3 text-purple-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        <h3 class="font-semibold">Date & Session</h3>
+                <div class="pro-card p-5 rounded-xl">
+                    <div class="flex items-center gap-2 mb-3.5 text-purple-600">
+                        <div class="p-1.5 bg-purple-50 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
+                        <h3 class="font-bold text-sm text-slate-800">Date & Session</h3>
                     </div>
                     <div class="space-y-3">
                         <div class="flex gap-2">
                             <div class="w-1/2">
-                                <label class="text-xs text-gray-500 font-semibold uppercase">Month</label>
-                                <select id="examMonth" onchange="saveToStorage()" class="w-full border-b-2 border-gray-200 py-1 focus:border-purple-500 focus:outline-none bg-transparent font-medium">
+                                <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Month</label>
+                                <select id="examMonth" onchange="saveToStorage(); if(masterData.length) showTab(activeTab);" class="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:border-purple-500 focus:outline-none bg-slate-50 font-semibold text-slate-700">
                                     <option>April</option>
                                     <option selected>November</option>
                                 </select>
                             </div>
                             <div class="w-1/2">
-                                <label class="text-xs text-gray-500 font-semibold uppercase">Year</label>
-                                <input type="text" id="examYear" value="2026" oninput="saveToStorage()" class="w-full border-b-2 border-gray-200 py-1 focus:border-purple-500 focus:outline-none bg-transparent font-medium">
+                                <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Year</label>
+                                <input type="text" id="examYear" value="2026" oninput="saveToStorage(); if(masterData.length) showTab(activeTab);" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm focus:border-purple-500 focus:outline-none bg-slate-50 font-semibold text-slate-700">
                             </div>
                         </div>
                         <div class="flex gap-2">
                             <div class="w-2/3">
-                                <label class="text-xs text-gray-500 font-semibold uppercase">Date</label>
-                                <input type="text" id="examDate" value="29-10-2026" oninput="saveToStorage(); if(masterData.length) showTab(activeTab);" class="w-full border-b-2 border-gray-200 py-1 focus:border-purple-500 focus:outline-none bg-transparent font-medium">
+                                <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Exam Date</label>
+                                <input type="text" id="examDate" value="29-10-2026" oninput="saveToStorage(); if(masterData.length) showTab(activeTab);" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm focus:border-purple-500 focus:outline-none bg-slate-50 font-semibold text-slate-700">
                             </div>
                             <div class="w-1/3">
-                                <label class="text-xs text-gray-500 font-semibold uppercase">Session</label>
-                                <select id="examSession" onchange="saveToStorage(); if(masterData.length) showTab(activeTab);" class="w-full border-b-2 border-gray-200 py-1 focus:border-purple-500 focus:outline-none bg-transparent font-bold text-purple-700">
+                                <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Session</label>
+                                <select id="examSession" onchange="saveToStorage(); if(masterData.length) showTab(activeTab);" class="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:border-purple-500 focus:outline-none bg-purple-50 font-extrabold text-purple-700">
                                     <option>FN</option>
                                     <option selected>AN</option>
                                 </select>
@@ -176,98 +199,106 @@
                     </div>
                 </div>
 
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex items-center gap-2 mb-3 text-orange-500">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
-                        <h3 class="font-semibold">Configuration</h3>
+                <div class="pro-card p-5 rounded-xl">
+                    <div class="flex items-center gap-2 mb-3.5 text-amber-600">
+                        <div class="p-1.5 bg-amber-50 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></div>
+                        <h3 class="font-bold text-sm text-slate-800">Hall Capacity</h3>
                     </div>
                     <div class="space-y-2">
                         <div>
-                            <label class="text-xs text-gray-500 font-semibold uppercase block mb-1">Default Students per Hall</label>
-                            <input type="number" id="hallStrength" value="30" onchange="if(masterData.length) { customCapacities = []; allocateSeats(); showTab(activeTab); }" class="w-full border rounded-lg px-3 py-1.5 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none font-bold text-center text-lg">
+                            <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Default Seats per Room</label>
+                            <input type="number" id="hallStrength" value="30" onchange="if(masterData.length) { customCapacities = []; allocateSeats(); showTab(activeTab); }" class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2.5 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none font-extrabold text-center text-xl text-slate-800">
                         </div>
+                        <p class="text-[11px] text-slate-400 leading-tight pt-1">Individual room limits can be adjusted inside Tab 1.</p>
                     </div>
                 </div>
                 
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex items-center gap-2 mb-3 text-red-500">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                        <h3 class="font-semibold">Data Source</h3>
+                <div class="pro-card p-5 rounded-xl">
+                    <div class="flex items-center gap-2 mb-3 text-blue-600">
+                        <div class="p-1.5 bg-blue-50 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg></div>
+                        <h3 class="font-bold text-sm text-slate-800">Upload Nominal Rolls</h3>
                     </div>
                     
                     <div class="text-center">
-                        <label id="dropZone" class="custom-file-upload rounded-xl w-full flex flex-col items-center justify-center min-h-[75px]">
+                        <label id="dropZone" class="custom-file-upload rounded-xl w-full flex flex-col items-center justify-center min-h-[72px] p-2">
                             <input type="file" id="fileInput" multiple accept=".csv, .pdf" onchange="processFiles()" class="hidden">
-                            <div class="text-xs text-gray-500 font-medium pointer-events-none">Click to upload Nominal Roll<br>or Drag & Drop files here</div>
+                            <div class="text-xs text-slate-500 font-semibold pointer-events-none">Click to select PDF/CSV<br><span class="text-[10px] text-slate-400 font-normal">or Drag & Drop files</span></div>
                         </label>
                     </div>
-                    <div class="mt-3 flex gap-2">
-                        <button onclick="processFiles()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-1.5 text-sm font-semibold transition-colors">Process</button>
-                        <button onclick="clearFiles()" class="px-3 bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-600 rounded-lg text-sm font-semibold transition-colors">Clear</button>
+                    <div class="mt-2.5 flex gap-2">
+                        <button onclick="processFiles()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-1.5 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm">Process</button>
+                        <button onclick="clearFiles()" class="px-3 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 rounded-lg text-xs font-bold transition-colors">Clear</button>
                     </div>
                 </div>
             </div>
 
-            <div id="studentFinderBox" class="hidden mb-6 bg-blue-50/80 border border-blue-200 p-4 rounded-xl shadow-sm">
+            <!-- Quick Student Search Bar -->
+            <div id="studentFinderBox" class="hidden mb-6 bg-slate-900 text-white p-4 rounded-xl shadow-md">
                 <div class="flex flex-col md:flex-row items-center gap-3">
-                    <div class="flex items-center gap-2 text-blue-800 font-bold text-sm min-w-fit">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        Quick Student Finder:
+                    <div class="flex items-center gap-2 text-blue-400 font-bold text-xs uppercase tracking-wider min-w-fit">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        Student Locator:
                     </div>
-                    <input type="text" id="regSearchInput" oninput="searchStudentReg()" placeholder="Type Register Number or Name to locate Room & Seat..." class="w-full md:w-80 border border-blue-300 rounded-lg px-3 py-1.5 text-sm font-semibold uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                    <div id="regSearchResult" class="text-sm font-bold text-gray-700 flex-1"></div>
+                    <input type="text" id="regSearchInput" oninput="searchStudentReg()" placeholder="Search by Register Number or Candidate Name..." class="w-full md:w-80 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-semibold uppercase focus:outline-none focus:border-blue-400 bg-slate-800 text-white placeholder-slate-400">
+                    <div id="regSearchResult" class="text-xs sm:text-sm font-semibold text-slate-200 flex-1"></div>
                 </div>
             </div>
 
-            <div id="fileStatusBox" class="hidden mb-6 p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 text-sm text-green-800 shadow-sm"></div>
+            <!-- File Status & Breakdown -->
+            <div id="fileStatusBox" class="hidden mb-6 p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 text-sm text-emerald-900"></div>
 
-            <div class="flex flex-wrap gap-2 md:gap-3 justify-center mb-2" id="tabsContainer" style="display: none;">
-                <button onclick="showTab('rooms')" id="tab-rooms" class="tab-btn active px-4 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all shadow-sm bg-gray-100 text-gray-600 hover:bg-purple-100 hover:text-purple-700">1. Assign Rooms</button>
-                <button onclick="showTab('seating')" id="tab-seating" class="tab-btn px-4 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all shadow-sm bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-700">2. Seating Plan</button>
-                <button onclick="showTab('summary')" id="tab-summary" class="tab-btn px-4 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all shadow-sm bg-gray-100 text-gray-600 hover:bg-teal-100 hover:text-teal-700">3. Summary</button>
-                <button onclick="showTab('details')" id="tab-details" class="tab-btn px-4 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all shadow-sm bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-700">4. Invigilator Details</button>
-                <button onclick="showTab('doorslips')" id="tab-doorslips" class="tab-btn px-4 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all shadow-sm bg-gray-100 text-gray-600 hover:bg-pink-100 hover:text-pink-700">5. Door Slips</button>
-                <button onclick="showTab('paperslips')" id="tab-paperslips" class="tab-btn px-4 py-2 rounded-full font-semibold text-xs sm:text-sm transition-all shadow-sm bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700">6. Paper-wise Slips</button>
+            <!-- Navigation Pills -->
+            <div class="flex flex-wrap gap-2 justify-center pt-2" id="tabsContainer" style="display: none;">
+                <button onclick="showTab('rooms')" id="tab-rooms" class="tab-btn active px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 text-slate-600 hover:bg-slate-200">1. Assign Rooms</button>
+                <button onclick="showTab('seating')" id="tab-seating" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 text-slate-600 hover:bg-slate-200">2. Seating Plan</button>
+                <button onclick="showTab('summary')" id="tab-summary" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 text-slate-600 hover:bg-slate-200">3. Chief Summary</button>
+                <button onclick="showTab('details')" id="tab-details" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 text-slate-600 hover:bg-slate-200">4. Invigilator Details</button>
+                <button onclick="showTab('doorslips')" id="tab-doorslips" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 text-slate-600 hover:bg-slate-200">5. Door Slips</button>
+                <button onclick="showTab('paperslips')" id="tab-paperslips" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 text-slate-600 hover:bg-slate-200">6. Paper-wise Slips</button>
             </div>
         </div>
 
-        <div class="no-print flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm mb-6 border border-gray-100" id="printContainer" style="display: none;">
+        <!-- Action Print Bar -->
+        <div class="no-print flex flex-wrap items-center justify-between gap-4 bg-white px-6 py-4 rounded-2xl shadow-sm mb-6 border border-slate-200/80" id="printContainer" style="display: none;">
             <div class="flex items-center gap-3">
-                <div class="bg-gray-100 p-2 rounded-lg">
-                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                <div class="bg-blue-50 text-blue-600 p-2.5 rounded-xl">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-500 uppercase block">Orientation</label>
-                    <select id="pdfOrientation" class="border-none bg-transparent font-bold text-sm focus:outline-none cursor-pointer">
-                        <option value="portrait">Portrait (Vertical)</option>
-                        <option value="landscape">Landscape (Horizontal)</option>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Page Orientation</label>
+                    <select id="pdfOrientation" class="border-none bg-transparent font-extrabold text-sm text-slate-800 focus:outline-none cursor-pointer">
+                        <option value="portrait">Portrait (A4 Vertical)</option>
+                        <option value="landscape">Landscape (A4 Horizontal)</option>
                     </select>
                 </div>
             </div>
             
             <div class="flex flex-wrap gap-3">
-                <button onclick="openPrintInNewTab()" class="bg-gray-800 hover:bg-black text-white py-2 px-5 rounded-lg font-semibold text-sm transition-colors shadow-md flex items-center gap-2">
+                <button onclick="openPrintInNewTab()" class="bg-slate-800 hover:bg-slate-900 text-white py-2.5 px-5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                    Pop-out Print
+                    Pop-out Print View
                 </button>
-                <button onclick="triggerPrint()" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg font-bold transition-colors shadow-md flex items-center gap-2">
+                <button onclick="triggerPrint()" class="bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-6 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md shadow-blue-600/20 flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Print / Save PDF
                 </button>
             </div>
         </div>
 
-        <div id="printableArea" class="bg-white p-8 rounded-2xl shadow-sm cambria-font text-black border border-gray-100 min-h-[500px]">
-            <div class="flex flex-col items-center justify-center h-full text-gray-400 py-20 no-print font-sans opacity-60">
-                <svg class="w-20 h-20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                <p class="text-lg font-medium">Ready to organize.</p>
-                <p class="text-sm mt-1">Upload Nominal Roll PDF/CSV files to begin.</p>
+        <!-- Document Preview Canvas -->
+        <div id="printableArea" class="bg-white p-6 sm:p-10 rounded-2xl shadow-sm cambria-font text-black border border-slate-200/80 min-h-[480px]">
+            <div class="flex flex-col items-center justify-center h-full text-slate-400 py-20 no-print font-sans">
+                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 text-slate-400">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <p class="text-base font-bold text-slate-600">No Nominal Rolls Loaded</p>
+                <p class="text-xs mt-1 text-slate-400">Upload University Examination PDF or CSV files above to generate reports.</p>
             </div>
         </div>
 
-        <div class="text-center mt-8 text-xs text-gray-400 font-medium tracking-widest uppercase no-print pb-4">
-            Designed & Developed by <a href="https://in.linkedin.com/in/javidkarathodi" target="_blank" class="hover:text-blue-600 transition-colors">Javid Karathodi</a>
-        </div>
+        <footer class="text-center mt-8 text-xs text-slate-400 font-semibold tracking-wider uppercase no-print pb-4">
+            Designed & Engineered by <a href="https://in.linkedin.com/in/javidkarathodi" target="_blank" class="text-blue-600 hover:underline">Javid Karathodi</a>
+        </footer>
     </div>
 
     <script>
@@ -292,7 +323,7 @@
 
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            dropZone.style.borderColor = '#3b82f6';
+            dropZone.style.borderColor = '#2563eb';
             dropZone.style.backgroundColor = '#eff6ff';
         });
 
@@ -331,7 +362,7 @@
                     savedRoomDetails,
                     fileLogs
                 };
-                localStorage.setItem('examSeatingAppState_v5', JSON.stringify(state));
+                localStorage.setItem('examSeatingAppState_v6', JSON.stringify(state));
                 const badge = document.getElementById('autoSaveBadge');
                 if (badge && masterData.length > 0) badge.classList.remove('hidden');
             } catch (e) {
@@ -341,7 +372,7 @@
 
         function loadFromStorage() {
             try {
-                const raw = localStorage.getItem('examSeatingAppState_v5');
+                const raw = localStorage.getItem('examSeatingAppState_v6');
                 if (!raw) return;
                 const state = JSON.parse(raw);
                 if (state.collegeName !== undefined) document.getElementById('collegeName').value = state.collegeName;
@@ -375,25 +406,30 @@
         function renderStatusBox() {
             const statusBox = document.getElementById('fileStatusBox');
             let schemeTotals = { 'CBCSS': 0, 'FYUG': 0, 'PG': 0, 'SDE': 0 };
+            let namedCount = 0;
             masterData.forEach(s => {
                 if(schemeTotals[s.scheme] !== undefined) schemeTotals[s.scheme]++;
+                if(s.name && s.name.trim().length > 1) namedCount++;
             });
 
             let breakdownHTML = '';
-            if(schemeTotals['CBCSS'] > 0) breakdownHTML += `<span class="bg-blue-100 text-blue-800 border border-blue-200 px-2 py-1 rounded text-xs shadow-sm">CBCSS: ${schemeTotals['CBCSS']}</span>`;
-            if(schemeTotals['FYUG'] > 0) breakdownHTML += `<span class="bg-purple-100 text-purple-800 border border-purple-200 px-2 py-1 rounded text-xs shadow-sm">FYUG: ${schemeTotals['FYUG']}</span>`;
-            if(schemeTotals['PG'] > 0) breakdownHTML += `<span class="bg-indigo-100 text-indigo-800 border border-indigo-200 px-2 py-1 rounded text-xs shadow-sm">PG: ${schemeTotals['PG']}</span>`;
-            if(schemeTotals['SDE'] > 0) breakdownHTML += `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-1 rounded text-xs shadow-sm">SDE: ${schemeTotals['SDE']}</span>`;
+            if(schemeTotals['CBCSS'] > 0) breakdownHTML += `<span class="bg-blue-100 text-blue-800 border border-blue-200 px-2.5 py-1 rounded-lg text-xs font-bold">CBCSS: ${schemeTotals['CBCSS']}</span>`;
+            if(schemeTotals['FYUG'] > 0) breakdownHTML += `<span class="bg-purple-100 text-purple-800 border border-purple-200 px-2.5 py-1 rounded-lg text-xs font-bold">FYUG: ${schemeTotals['FYUG']}</span>`;
+            if(schemeTotals['PG'] > 0) breakdownHTML += `<span class="bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-1 rounded-lg text-xs font-bold">PG: ${schemeTotals['PG']}</span>`;
+            if(schemeTotals['SDE'] > 0) breakdownHTML += `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg text-xs font-bold">SDE: ${schemeTotals['SDE']}</span>`;
 
             statusBox.innerHTML = `
-                <div class="font-bold mb-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-green-200 pb-3 gap-2">
-                    <span class="text-green-800">Data Processed Successfully</span>
+                <div class="font-bold mb-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-emerald-200 pb-3 gap-2">
+                    <span class="text-emerald-900 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Nominal Rolls Processed (${namedCount} Candidate Names Extracted)
+                    </span>
                     <div class="flex flex-wrap items-center gap-2">
                         ${breakdownHTML}
-                        <span class="bg-green-600 text-white px-3 py-1 rounded text-xs shadow-sm ml-1">Total: ${masterData.length}</span>
+                        <span class="bg-emerald-700 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm">Total: ${masterData.length}</span>
                     </div>
                 </div>
-                <div class="space-y-1.5 mt-2 pl-1 max-h-60 overflow-y-auto">${fileLogs.join('')}</div>`;
+                <div class="space-y-1.5 mt-2 pl-1 max-h-52 overflow-y-auto text-xs">${fileLogs.join('')}</div>`;
             statusBox.classList.remove('hidden');
         }
 
@@ -414,13 +450,13 @@
             });
 
             if (matches.length === 0) {
-                resBox.innerHTML = `<span class="text-red-600">No student found matching "${q}"</span>`;
+                resBox.innerHTML = `<span class="text-red-400">No student found matching "${q}"</span>`;
             } else if (matches.length === 1) {
                 const m = matches[0];
-                resBox.innerHTML = `<span class="bg-emerald-100 text-emerald-900 border border-emerald-300 px-3 py-1 rounded-lg inline-block">Found: <b>${m.regNo} ${m.name ? `(${m.name})` : ''}</b> &rarr; <b>Hall ${m.hallNo} (Room: ${m.room})</b> | Seat: <b>RNBB${m.seat}</b></span>`;
+                resBox.innerHTML = `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-lg inline-block"><b>${m.regNo} ${m.name ? `- ${m.name}` : ''}</b> &rarr; <b>Room ${m.room} (Hall ${m.hallNo})</b> | Seat: <b>RNBB${m.seat}</b></span>`;
             } else {
-                const preview = matches.slice(0, 3).map(m => `<b>${m.regNo}</b> ${m.name ? `(${m.name})` : ''} [Room ${m.room}, Seat ${m.seat}]`).join(' | ');
-                resBox.innerHTML = `<span class="text-blue-900">${ preview } ${matches.length > 3 ? `... +${matches.length - 3} more` : ''}</span>`;
+                const preview = matches.slice(0, 3).map(m => `<b>${m.regNo}</b> ${m.name ? `(${m.name})` : ''} [Room ${m.room}, RNBB${m.seat}]`).join(' | ');
+                resBox.innerHTML = `<span class="text-blue-200">${ preview } ${matches.length > 3 ? `... +${matches.length - 3} more` : ''}</span>`;
             }
         }
 
@@ -455,15 +491,15 @@
             isBarcodeMode = !isBarcodeMode;
             const btn = document.getElementById('barcodeToggleBtn');
             btn.innerHTML = isBarcodeMode 
-                ? '<span class="flex items-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Switch to Non-Barcode</span>' 
-                : '<span class="flex items-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Switch to Barcode Exam</span>';
+                ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Switch to Non-Barcode' 
+                : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Switch to Barcode Exam';
             
             if(isBarcodeMode) {
-                btn.classList.remove('from-green-500', 'to-emerald-600', 'hover:from-green-600', 'hover:to-emerald-700');
-                btn.classList.add('from-amber-500', 'to-orange-600', 'hover:from-amber-600', 'hover:to-orange-700');
+                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                btn.classList.add('bg-amber-600', 'hover:bg-amber-700');
             } else {
-                btn.classList.remove('from-amber-500', 'to-orange-600', 'hover:from-amber-600', 'hover:to-orange-700');
-                btn.classList.add('from-green-500', 'to-emerald-600', 'hover:from-green-600', 'hover:to-emerald-700');
+                btn.classList.remove('bg-amber-600', 'hover:bg-amber-700');
+                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
             }
         }
 
@@ -474,16 +510,18 @@
             customCapacities = [];
             savedRoomDetails = {};
             fileLogs = [];
-            localStorage.removeItem('examSeatingAppState_v5');
+            localStorage.removeItem('examSeatingAppState_v6');
             document.title = 'Exam Seating Arrangement System';
             document.getElementById('fileStatusBox').classList.add('hidden');
             document.getElementById('studentFinderBox').classList.add('hidden');
             document.getElementById('autoSaveBadge').classList.add('hidden');
             document.getElementById('printableArea').innerHTML = `
-                <div class="flex flex-col items-center justify-center h-full text-gray-400 py-20 no-print font-sans opacity-60">
-                    <svg class="w-20 h-20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    <p class="text-lg font-medium">Files Cleared.</p>
-                    <p class="text-sm mt-1">Upload new files to start again.</p>
+                <div class="flex flex-col items-center justify-center h-full text-slate-400 py-20 no-print font-sans">
+                    <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 text-slate-400">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </div>
+                    <p class="text-base font-bold text-slate-600">All Data Cleared</p>
+                    <p class="text-xs mt-1 text-slate-400">Upload Nominal Roll PDF/CSV files to start a fresh session.</p>
                 </div>`;
             document.getElementById('tabsContainer').style.display = 'none';
             document.getElementById('printContainer').style.display = 'none';
@@ -499,9 +537,9 @@
             savedRoomDetails = {};
 
             document.getElementById('printableArea').innerHTML = `
-                <div class="flex flex-col items-center justify-center h-full text-blue-500 py-20 no-print font-sans">
-                    <svg class="animate-spin w-12 h-12 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <p class="text-lg font-semibold">Analyzing Documents & Extracting Names...</p>
+                <div class="flex flex-col items-center justify-center h-full text-blue-600 py-20 no-print font-sans">
+                    <svg class="animate-spin w-10 h-10 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <p class="text-base font-bold">Scanning Nominal Rolls & Candidate Names...</p>
                 </div>`;
 
             for (let file of files) {
@@ -514,7 +552,7 @@
                     }
                 } catch (err) {
                     console.error("Error reading file:", file.name, err);
-                    fileLogs.push(`<div class="flex items-center gap-2 text-red-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <b>${file.name}:</b> Error reading file</div>`);
+                    fileLogs.push(`<div class="flex items-center gap-2 text-red-600"><b>${file.name}:</b> Error reading file</div>`);
                 }
             }
             
@@ -523,9 +561,8 @@
             if (masterData.length === 0) {
                 document.getElementById('printableArea').innerHTML = `
                     <div class="flex flex-col items-center justify-center h-full text-red-500 py-20 no-print font-sans">
-                        <svg class="w-16 h-16 mb-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        <p class="text-lg font-bold">No Data Found</p>
-                        <p class="text-sm mt-1 text-gray-600">Could not detect register numbers. Check file format.</p>
+                        <p class="text-lg font-bold">No Valid Register Numbers Found</p>
+                        <p class="text-xs mt-1 text-slate-500">Please verify the uploaded PDF/CSV file format.</p>
                     </div>`;
                 return;
             }
@@ -538,21 +575,16 @@
             showTab('rooms');
         }
 
-        function extractStudentNameFromText(cleanText, reg, nextReg) {
-            const idx = cleanText.indexOf(reg);
-            if (idx === -1) return "";
-            let after = cleanText.substring(idx + reg.length, idx + reg.length + 140);
-            if (nextReg) {
-                const nextIdx = after.indexOf(nextReg);
-                if (nextIdx !== -1) after = after.substring(0, nextIdx);
-            }
-            // Match up to D.O.B or next serial number or table end
-            const dobMatch = after.match(/^\s*([A-Za-z\s\.]+?)(?=\s+\d{2}[\.\-\/]\d{2}[\.\-\/]\d{4}|\s+\d+\s*$|\s{3,}|$)/);
-            let rawName = dobMatch ? dobMatch[1] : after.split(/\d/)[0];
-            rawName = rawName.replace(/[^A-Za-z\s\.]/g, ' ').replace(/\s+/g, ' ').trim();
-            // Filter out accidental header words
-            rawName = rawName.replace(/\b(PAGE|OF|UNIVERSITY|CALICUT|NOMINAL|ROLL|SIGN|REMARKS|DOB)\b/gi, '').trim();
-            return rawName.toUpperCase();
+        function cleanExtractedName(raw) {
+            if (!raw) return "";
+            let s = raw
+                .replace(/\b\d{2}[\.\-\/]\d{2}[\.\-\/]\d{4}\b/g, '') // remove DOB
+                .replace(/\b\d+\b/g, '') // remove numbers
+                .replace(/[^A-Za-z\s\.]/g, ' ')
+                .replace(/\b(PAGE|OF|UNIVERSITY|CALICUT|NOMINAL|ROLL|SIGN|REMARKS|DOB|CANDIDATES|DETAILS|REGISTER|NUMBER|NAME|EXAMINATION|SEMESTER|COLLEGE|COURSE|SLOT|DATE)\b/gi, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            return s.toUpperCase();
         }
 
         async function processPDF(file) {
@@ -563,12 +595,61 @@
             } catch (e) {
                 pdf = await pdfjsLib.getDocument({data: arrayBuffer, disableWorker: true}).promise;
             }
+            
             let fullText = "";
+            let coordNameMap = {};
+            const singleRegTest = /^[A-Z]{4}[A-Z0-9]{2,5}\d{2,4}$/;
+
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const textContent = await page.getTextContent();
-                fullText += textContent.items.map(item => item.str).join(" ") + "\n";
+                
+                // 1. Group items by Y-coordinate (row-wise extraction for accurate Name matching)
+                let rows = [];
+                textContent.items.forEach(item => {
+                    const str = item.str.trim();
+                    if (!str) return;
+                    const x = item.transform[4];
+                    const y = item.transform[5];
+                    // Find row within 5pt vertical tolerance
+                    let row = rows.find(r => Math.abs(r.y - y) < 5);
+                    if (!row) {
+                        row = { y: y, items: [] };
+                        rows.push(row);
+                    }
+                    row.items.push({ x: x, str: str });
+                });
+
+                rows.sort((a, b) => b.y - a.y); // Top to bottom
+
+                rows.forEach(r => {
+                    r.items.sort((a, b) => a.x - b.x); // Left to right
+                    const rowLine = r.items.map(it => it.str).join(" ");
+                    fullText += rowLine + "\n";
+
+                    // Check if this horizontal row contains a Register Number
+                    for (let k = 0; k < r.items.length; k++) {
+                        const token = r.items[k].str.replace(/\s+/g, '');
+                        if (singleRegTest.test(token) && !/^(PAGE|DATE|SLOT|TIME|EXAM|CORE|FYUG|CBCS|SDEC)/i.test(token)) {
+                            const regX = r.items[k].x;
+                            // Collect text items to the right of Register Number (before DOB column)
+                            let nameParts = [];
+                            for (let m = k + 1; m < r.items.length; m++) {
+                                const nextStr = r.items[m].str.trim();
+                                // Stop if we hit a Date of Birth (dd.mm.yyyy)
+                                if (/\d{2}[\.\-\/]\d{2}[\.\-\/]\d{4}/.test(nextStr)) break;
+                                if (singleRegTest.test(nextStr)) break;
+                                nameParts.push(nextStr);
+                            }
+                            const cleaned = cleanExtractedName(nameParts.join(" "));
+                            if (cleaned.length > 1) {
+                                coordNameMap[token] = cleaned;
+                            }
+                        }
+                    }
+                });
             }
+
             const cleanText = fullText.replace(/\s+/g, " ");
 
             // Auto-detect College Name if empty
@@ -605,8 +686,8 @@
 
             let subjectName = file.name.replace(/\.pdf$/i, '');
             const paperMatch = cleanText.match(/Paper Details\s*:?\s*(.*?)(?=Exam Date|SI\.No|Sl\.No|#)/i);
-            const courseMatch = cleanText.match(/Course\s*\|?\s*([^\[]+\[[^\]]+\])/i);
-            const slotMatch = cleanText.match(/Slot\s*\|?\s*(.*?)(?=Date of Examination)/i);
+            const courseMatch = cleanText.match(/Course\s*:?\s*\|?\s*([^\[]+\[[^\]]+\])/i);
+            const slotMatch = cleanText.match(/Slot\s*:?\s*\|?\s*(.*?)(?=Date of Examination)/i);
 
             if (paperMatch && paperMatch[1].trim()) subjectName = "PAPER DETAILS: " + paperMatch[1].trim().replace(/\s*\|\s*/g, ' ');
             else if (courseMatch && courseMatch[1].trim()) subjectName = "PAPER DETAILS: " + courseMatch[1].trim() + (slotMatch ? ` --(${slotMatch[1].trim()})` : "");
@@ -624,8 +705,15 @@
 
             const uniqueRegs = [...new Set(validRegs)];
             uniqueRegs.forEach((reg, idx) => {
-                const nextReg = uniqueRegs[idx + 1] || null;
-                const sName = extractStudentNameFromText(cleanText, reg, nextReg);
+                let sName = coordNameMap[reg] || "";
+                // Fallback linear regex if coordinate map missed it
+                if (!sName) {
+                    const pos = cleanText.indexOf(reg);
+                    if (pos !== -1) {
+                        const snippet = cleanText.substring(pos + reg.length, pos + reg.length + 80);
+                        sName = cleanExtractedName(snippet.split(/\d/)[0]);
+                    }
+                }
                 masterData.push({ 
                     regNo: reg.trim(), 
                     name: sName,
@@ -635,7 +723,7 @@
                 });
             });
 
-            fileLogs.push(`<div class="flex justify-between items-center"><span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span class="font-semibold">${file.name}</span></span><span class="text-xs bg-white px-2 py-0.5 rounded border border-green-200">${schemeType} | ${uniqueRegs.length} std</span></div>`);
+            fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700">${file.name}</span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${schemeType} • ${uniqueRegs.length} Students</span></div>`);
         }
 
         async function processCSV(file) {
@@ -664,7 +752,7 @@
                     count++;
                 }
             });
-            fileLogs.push(`<div class="flex justify-between items-center"><span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span class="font-semibold">${file.name}</span></span><span class="text-xs bg-white px-2 py-0.5 rounded border border-green-200">${schemeType} | ${count} std</span></div>`);
+            fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700">${file.name}</span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${schemeType} • ${count} Students</span></div>`);
         }
 
         function allocateSeats() {
@@ -679,10 +767,9 @@
             const defaultRooms = ["201", "202", "205", "301", "302", "308", "309", "310", "311", "312", "313", "314", "315"];
             let globalHallNo = 1;
 
-            // Map regNo + subject to student Name
             const nameLookup = {};
             masterData.forEach(s => {
-                nameLookup[s.regNo] = s.name || "";
+                if (s.name) nameLookup[s.regNo] = s.name;
             });
 
             function getCap(hallIdx) {
@@ -806,19 +893,15 @@
 
         function setActiveTabBtn(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-gray-800', 'text-white');
-                btn.classList.add('bg-gray-100', 'text-gray-600');
+                btn.classList.remove('active');
             });
             const activeBtn = document.getElementById(`tab-${tabName}`);
-            if(activeBtn) {
-                activeBtn.classList.add('active', 'bg-gray-800', 'text-white');
-                activeBtn.classList.remove('bg-gray-100', 'text-gray-600');
-            }
+            if(activeBtn) activeBtn.classList.add('active');
         }
 
         function getCollegeHeaderHtml() {
             const colName = document.getElementById('collegeName').value.trim();
-            return colName ? `<h3 class="college-header text-lg font-bold uppercase tracking-wider text-center mb-1">${colName}</h3>` : '';
+            return colName ? `<h3 class="college-header text-base font-extrabold uppercase tracking-wide text-center mb-1">College : ${colName}</h3>` : '';
         }
 
         function downloadQPCSV() {
@@ -871,7 +954,7 @@
                         .text-center { text-align: center; }
                         .w-12 { width: 45px; } .w-20 { width: 80px; }
                         h2 { font-size: 12pt; margin-bottom: 4px; margin-top: 0; text-align: center; text-decoration: underline; text-transform: uppercase; }
-                        h3 { font-size: 13pt; margin-bottom: 2px; margin-top: 0; text-align: center; text-transform: uppercase; }
+                        h3 { font-size: 12pt; margin-bottom: 2px; margin-top: 0; text-align: center; text-transform: uppercase; }
                         p { font-weight: bold; margin-bottom: 10px; font-size: 10pt; }
                         @page { size: A4 ${orient}; margin: 8mm; }
                     </style>
@@ -925,12 +1008,14 @@
                 const allSubjects = [...new Set(masterData.map(s => s.subject))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
                 html += `<div class="font-sans no-print">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 border-b border-gray-200 pb-3">
-                        <div class="flex items-center gap-2">
-                            <div class="bg-purple-100 text-purple-600 p-2 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
-                            <h2 class="text-xl font-bold text-gray-800">Assign Rooms, Invigilators & Custom Capacities</h2>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 border-b border-slate-200 pb-4">
+                        <div class="flex items-center gap-2.5">
+                            <div class="bg-blue-600 text-white p-2 rounded-xl shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
+                            <div>
+                                <h2 class="text-lg font-extrabold text-slate-800">Room & Invigilator Allocation</h2>
+                                <p class="text-xs text-slate-400">Customize room numbers, invigilators, and seat capacity per hall</p>
+                            </div>
                         </div>
-                        <span class="text-xs text-gray-500 font-medium">Tip: Change 'Hall Limit' on any room to auto-recalculate seats</span>
                     </div>`;
                 
                 hallAllocations.forEach((hall, idx) => {
@@ -941,65 +1026,64 @@
                     });
 
                     const hType = getHallType(hall);
-                    const badgeColor = hType === 'SDE' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-blue-100 text-blue-700 border-blue-200';
+                    const badgeColor = hType === 'SDE' ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-blue-100 text-blue-800 border-blue-200';
 
                     html += `
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-6 items-start bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                            <div class="lg:col-span-3 space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-bold text-gray-800">Hall ${hall.hallNo}</span>
-                                    <span class="text-xs px-2 py-1 rounded-md font-bold border ${badgeColor}">${hType} (${hall.students.length} std)</span>
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-5 items-start bg-slate-50/70 p-5 rounded-2xl border border-slate-200/90 hover:border-slate-300 transition-all">
+                            <div class="lg:col-span-3 space-y-3 bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                                    <span class="font-extrabold text-slate-800">Hall #${hall.hallNo}</span>
+                                    <span class="text-[11px] px-2.5 py-0.5 rounded-full font-bold border ${badgeColor}">${hType} • ${hall.students.length} Seats</span>
                                 </div>
                                 <div class="grid grid-cols-3 gap-2">
                                     <div class="col-span-2">
-                                        <label class="text-xs font-semibold text-gray-500 uppercase block mb-1">Room Name</label>
-                                        <input type="text" class="w-full border border-gray-300 rounded-lg p-2 font-semibold text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" 
+                                        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Room No</label>
+                                        <input type="text" class="w-full border border-slate-300 rounded-lg p-2 font-bold text-sm text-slate-800 focus:border-blue-500 outline-none" 
                                             placeholder="e.g. 201" value="${hall.room}" oninput="updateRoomField(${idx}, 'room', this.value)">
                                     </div>
                                     <div>
-                                        <label class="text-xs font-semibold text-orange-600 uppercase block mb-1" title="Custom seat limit for this hall">Hall Limit</label>
-                                        <input type="number" min="4" class="w-full border border-orange-200 bg-orange-50/40 rounded-lg p-2 font-bold text-center text-sm focus:border-orange-500 outline-none" 
+                                        <label class="text-[10px] font-bold text-amber-600 uppercase block mb-1" title="Custom seat limit">Max Cap</label>
+                                        <input type="number" min="4" class="w-full border border-amber-300 bg-amber-50/50 rounded-lg p-2 font-extrabold text-center text-sm text-amber-900 focus:border-amber-500 outline-none" 
                                             value="${hall.maxCapacity}" onchange="updateHallCapacity(${idx}, this.value)">
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="text-xs font-semibold text-gray-500 uppercase block mb-1">Invigilator</label>
-                                    <input type="text" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" 
-                                        placeholder="Teacher Name" value="${hall.invigilator || ''}" oninput="updateRoomField(${idx}, 'invigilator', this.value)">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Invigilator Name</label>
+                                    <input type="text" class="w-full border border-slate-300 rounded-lg p-2 text-sm font-medium text-slate-700 focus:border-blue-500 outline-none" 
+                                        placeholder="Enter Teacher Name" value="${hall.invigilator || ''}" oninput="updateRoomField(${idx}, 'invigilator', this.value)">
                                 </div>
                             </div>
 
-                            <div class="lg:col-span-6 border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 cambria-font relative">
-                                <div class="absolute top-0 right-0 bg-gray-200 text-gray-500 text-xs px-2 py-1 rounded-bl-lg font-sans font-bold">PREVIEW</div>
-                                <div class="flex justify-between items-center border-b-2 border-gray-800 pb-2 mb-3 font-bold text-sm">
+                            <div class="lg:col-span-6 border border-slate-300 rounded-xl p-4 bg-white cambria-font shadow-sm">
+                                <div class="flex justify-between items-center border-b-2 border-slate-800 pb-2 mb-3 font-bold text-sm">
                                     <span>Hall No. ${hall.hallNo} [${hType}]</span>
-                                    <span>Room: <u id="roomHeaderLabel_${idx}" class="text-blue-700 decoration-blue-700">${hall.room || '____'}</u></span>
+                                    <span>Room: <u id="roomHeaderLabel_${idx}" class="text-blue-700">${hall.room || '____'}</u></span>
                                     <span>${dateStr}</span>
-                                    <span>Str: ${hall.students.length}</span>
+                                    <span>Strength: ${hall.students.length}</span>
                                 </div>
                     `;
                     for (let [subj, regs] of Object.entries(bySubj)) {
                         html += `
-                            <div class="mb-3">
-                                <div class="text-xs font-bold underline text-gray-800">${subj} (Count: ${regs.length})</div>
-                                <div class="text-sm font-bold mt-1 text-gray-900 leading-snug">${formatRegList(regs)}</div>
+                            <div class="mb-3 last:mb-0">
+                                <div class="text-xs font-bold underline text-slate-800">${subj} (Count: ${regs.length})</div>
+                                <div class="text-sm font-bold mt-1 text-slate-900 leading-snug">${formatRegList(regs)}</div>
                             </div>
                         `;
                     }
                     html += `
                             </div>
 
-                            <div class="lg:col-span-3 bg-gray-50 p-3 rounded-xl border border-gray-200 h-full">
-                                <div class="font-bold text-xs text-gray-500 uppercase border-b border-gray-200 pb-2 mb-2">Class Mix</div>
+                            <div class="lg:col-span-3 bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
+                                <div class="font-bold text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2 mb-2.5">Paper Breakdown</div>
                     `;
                     allSubjects.forEach(subj => {
                         const cnt = bySubj[subj] ? bySubj[subj].length : 0;
                         if (cnt > 0) {
-                            const shortSubj = subj.replace(/^PAPER DETAILS:\s*/i, '').substring(0, 25) + '...';
+                            const shortSubj = subj.replace(/^PAPER DETAILS:\s*/i, '').substring(0, 26) + '...';
                             html += `
-                                <div class="flex justify-between items-center text-xs mb-1.5 bg-white p-1.5 rounded border border-gray-100">
-                                    <span class="truncate pr-2 font-medium text-gray-700" title="${subj}">${shortSubj}</span>
-                                    <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">${cnt}</span>
+                                <div class="flex justify-between items-center text-xs mb-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                                    <span class="truncate pr-2 font-semibold text-slate-700" title="${subj}">${shortSubj}</span>
+                                    <span class="bg-blue-600 text-white px-2 py-0.5 rounded-md font-bold text-[11px]">${cnt}</span>
                                 </div>
                             `;
                         }
@@ -1130,12 +1214,10 @@
                     <div class="flex flex-wrap items-center justify-between mb-2 mt-4 gap-2">
                         <div class="font-bold text-sm underline uppercase tracking-wider">QUESTION PAPERS TO BE PRINTED (ALPHABETICAL ORDER)</div>
                         <div class="no-print flex gap-2 font-sans">
-                            <button onclick="printQuestionPapersOnly()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-semibold shadow-sm flex items-center gap-1 transition-colors">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                            <button onclick="printQuestionPapersOnly()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1 transition-colors">
                                 Download QP PDF
                             </button>
-                            <button onclick="downloadQPCSV()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded text-xs font-semibold shadow-sm flex items-center gap-1 transition-colors">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <button onclick="downloadQPCSV()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1 transition-colors">
                                 Download CSV
                             </button>
                         </div>
@@ -1270,7 +1352,7 @@
                             <tr class="hover:bg-gray-50 print:bg-transparent">
                                 <td class="text-center py-1.5 text-gray-500">RNBB${sIdx + 1}</td>
                                 <td class="py-1.5 text-sm print:text-xs">${s.regNo}</td>
-                                <td class="py-1.5 text-gray-800">${s.name || ''}</td>
+                                <td class="py-1.5 text-gray-900">${s.name || ''}</td>
                                 <td class="py-1.5 text-gray-700">${printSubj}</td>
                                 <td class="py-1.5"></td>
                             </tr>
@@ -1326,7 +1408,6 @@
             }
 
             else if (tabName === 'paperslips') {
-                // Generate separate sheet per Hall AND per Subject (Room-wise + Paper-wise)
                 hallAllocations.forEach((hall) => {
                     const subjMap = {};
                     hall.students.forEach((s, idx) => {
@@ -1355,16 +1436,16 @@
                                 
                                 <table class="table-bordered text-xs font-bold mb-4 bg-gray-50">
                                     <tr>
-                                        <td class="w-1/4 py-1.5 px-3">Room Number</td>
-                                        <td class="py-1.5 px-3 text-base font-extrabold text-blue-900">ROOM: ${hall.room} &nbsp;(Hall No: ${hall.hallNo})</td>
+                                        <td class="w-1/4 py-1.5 px-3">Room & Hall No.</td>
+                                        <td class="py-1.5 px-3 text-base font-extrabold">ROOM: ${hall.room} &nbsp;(Hall No: ${hall.hallNo})</td>
                                     </tr>
                                     <tr>
-                                        <td class="w-1/4 py-1.5 px-3">Course / Subject</td>
+                                        <td class="w-1/4 py-1.5 px-3">Course / Paper</td>
                                         <td class="py-1.5 px-3 text-sm font-extrabold">${cleanSubjName}</td>
                                     </tr>
                                     <tr>
-                                        <td class="w-1/4 py-1.5 px-3">Date of Examination</td>
-                                        <td class="py-1.5 px-3">${dateStr} &nbsp;|&nbsp; <b>Students in this Room for this Paper: ${candidates.length}</b></td>
+                                        <td class="w-1/4 py-1.5 px-3">Date & Strength</td>
+                                        <td class="py-1.5 px-3">${dateStr} &nbsp;|&nbsp; <b>Candidates in this Room for this Paper: ${candidates.length}</b></td>
                                     </tr>
                                     <tr>
                                         <td class="w-1/4 py-1.5 px-3">Name of Invigilator</td>
@@ -1390,9 +1471,9 @@
                             html += `
                                 <tr class="hover:bg-gray-50">
                                     <td class="text-center py-2">${cIdx + 1}</td>
-                                    <td class="text-center py-2 text-gray-600">${cand.seatNo}</td>
+                                    <td class="text-center py-2">${cand.seatNo}</td>
                                     <td class="py-2 text-sm font-extrabold">${cand.regNo}</td>
-                                    <td class="py-2 text-gray-900 uppercase">${cand.name}</td>
+                                    <td class="py-2 uppercase font-bold">${cand.name}</td>
                                     <td class="py-2"></td>
                                     <td class="py-2"></td>
                                 </tr>
@@ -1401,7 +1482,7 @@
                         html += `
                                     </tbody>
                                 </table>
-                                <div class="mt-8 flex justify-between items-center text-xs font-bold text-gray-800">
+                                <div class="mt-8 flex justify-between items-center text-xs font-bold">
                                     <div>Total Present: _________</div>
                                     <div>Total Absent: _________</div>
                                     <div class="text-right">Name & Signature of Invigilator: _______________________</div>
@@ -1435,7 +1516,7 @@
                     <style>
                         body { font-family: Cambria, Georgia, serif; color: #000; padding: 5mm; font-size: 8.5pt; line-height: 1.15;}
                         .no-print { display: none !important; }
-                        .table-bordered th, .table-bordered td { border: 1px solid #000; padding: 3px 5px !important; font-size: 8.5pt !important;}
+                        .table-bordered th, .table-bordered td { border: 1px solid #000; padding: 3.5px 5px !important; font-size: 8.5pt !important;}
                         .table-bordered { border-collapse: collapse; width: 100%; text-align: left;}
                         .text-center { text-align: center; } .text-right { text-align: right; }
                         .font-bold, .font-extrabold { font-weight: bold; } .text-sm, .text-xs, .text-base, .text-lg, .text-xl, .text-2xl { font-size: 8.5pt !important; }
@@ -1446,7 +1527,6 @@
                         .py-1, .py-1\\.5, .py-2 { padding-top: 2px !important; padding-bottom: 2px !important; } 
                         .px-3, .px-4, .pl-4 { padding-left: 4px !important; padding-right: 4px !important; }
                         .bg-gray-50, .bg-gray-100, .bg-gray-200 { background-color: transparent !important; }
-                        .text-gray-500, .text-gray-600, .text-gray-700, .text-gray-800, .text-gray-900, .text-blue-900 { color: #000 !important; }
                         .flex { display: flex; } .justify-between { justify-content: space-between; } .items-center { align-items: center; }
                         .avoid-break { page-break-inside: avoid; margin-bottom: 6px !important; }
                         .page-break-hall, .page-break-paper { page-break-before: always; margin-bottom: 0 !important; padding-bottom: 0 !important; border: none !important; }
