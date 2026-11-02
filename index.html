@@ -81,7 +81,7 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="font-extrabold text-base sm:text-lg tracking-tight text-white">UniExam SeatPro</span>
-                        <span class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">v7.6 Sorted Summary</span>
+                        <span class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">v7.7 Reg-First Summary</span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
                         <span>Automated University Examination Suite</span>
@@ -419,7 +419,7 @@
                     currentSession,
                     sessionsData
                 };
-                localStorage.setItem('examSeatingAppState_v7.6', JSON.stringify(state));
+                localStorage.setItem('examSeatingAppState_v7.7', JSON.stringify(state));
                 const badge = document.getElementById('autoSaveBadge');
                 if (badge) badge.classList.remove('hidden');
             } catch (e) {
@@ -429,7 +429,7 @@
 
         function loadFromStorage() {
             try {
-                const raw = localStorage.getItem('examSeatingAppState_v7.6');
+                const raw = localStorage.getItem('examSeatingAppState_v7.7');
                 if (!raw) return;
                 const state = JSON.parse(raw);
                 if (state.collegeName !== undefined) document.getElementById('collegeName').value = state.collegeName;
@@ -533,7 +533,7 @@
             const sdeQPs = [];
 
             masterData.forEach(s => {
-                const targetList = s.type === 'SDE' ? sdeQPs : regQPs;
+                const targetList = (s.type === 'SDE') ? sdeQPs : regQPs;
                 let existing = targetList.find(item => item.subject === s.subject && item.type === s.type);
                 if (existing) {
                     existing.count++;
@@ -998,7 +998,7 @@
                 </head>
                 <body onload="setTimeout(() => { window.print(); }, 400)">
                     ${colHeader}
-                    <h2>[${currentSession}] QUESTION PAPERS TO BE PRINTED (REG FIRST, SDE AFTER)</h2>
+                    <h2>[${currentSession}] QUESTION PAPERS TO BE PRINTED (REGULAR FIRST, SDE AFTER)</h2>
                     <p>Date of Exam : ${dateStr} &nbsp;|&nbsp; Total Strength : ${totalQP}</p>
                     <table class="table-bordered">
                         <thead>
