@@ -578,8 +578,8 @@
         function cleanExtractedName(raw) {
             if (!raw) return "";
             let s = raw
-                .replace(/\b\d{2}[\.\-\/]\d{2}[\.\-\/]\d{4}\b/g, '') // remove DOB
-                .replace(/\b\d+\b/g, '') // remove numbers
+                .replace(/\b\d{2}[\.\-\/]\d{2}[\.\-\/]\d{4}\b/g, '')
+                .replace(/\b\d+\b/g, '')
                 .replace(/[^A-Za-z\s\.]/g, ' ')
                 .replace(/\b(PAGE|OF|UNIVERSITY|CALICUT|NOMINAL|ROLL|SIGN|REMARKS|DOB|CANDIDATES|DETAILS|REGISTER|NUMBER|NAME|EXAMINATION|SEMESTER|COLLEGE|COURSE|SLOT|DATE)\b/gi, '')
                 .replace(/\s+/g, ' ')
@@ -604,14 +604,12 @@
                 const page = await pdf.getPage(i);
                 const textContent = await page.getTextContent();
                 
-                // 1. Group items by Y-coordinate (row-wise extraction for accurate Name matching)
                 let rows = [];
                 textContent.items.forEach(item => {
                     const str = item.str.trim();
                     if (!str) return;
                     const x = item.transform[4];
                     const y = item.transform[5];
-                    // Find row within 5pt vertical tolerance
                     let row = rows.find(r => Math.abs(r.y - y) < 5);
                     if (!row) {
                         row = { y: y, items: [] };
@@ -620,23 +618,19 @@
                     row.items.push({ x: x, str: str });
                 });
 
-                rows.sort((a, b) => b.y - a.y); // Top to bottom
+                rows.sort((a, b) => b.y - a.y);
 
                 rows.forEach(r => {
-                    r.items.sort((a, b) => a.x - b.x); // Left to right
+                    r.items.sort((a, b) => a.x - b.x);
                     const rowLine = r.items.map(it => it.str).join(" ");
                     fullText += rowLine + "\n";
 
-                    // Check if this horizontal row contains a Register Number
                     for (let k = 0; k < r.items.length; k++) {
                         const token = r.items[k].str.replace(/\s+/g, '');
                         if (singleRegTest.test(token) && !/^(PAGE|DATE|SLOT|TIME|EXAM|CORE|FYUG|CBCS|SDEC)/i.test(token)) {
-                            const regX = r.items[k].x;
-                            // Collect text items to the right of Register Number (before DOB column)
                             let nameParts = [];
                             for (let m = k + 1; m < r.items.length; m++) {
                                 const nextStr = r.items[m].str.trim();
-                                // Stop if we hit a Date of Birth (dd.mm.yyyy)
                                 if (/\d{2}[\.\-\/]\d{2}[\.\-\/]\d{4}/.test(nextStr)) break;
                                 if (singleRegTest.test(nextStr)) break;
                                 nameParts.push(nextStr);
@@ -652,7 +646,6 @@
 
             const cleanText = fullText.replace(/\s+/g, " ");
 
-            // Auto-detect College Name if empty
             const colMatch = cleanText.match(/College\s*:\s*([^,\n]+(?:,[^,\n]+)?)(?=\s+Course|\s+Paper|\s+Slot|\s+Date)/i);
             if (colMatch && colMatch[1] && !document.getElementById('collegeName').value.trim()) {
                 document.getElementById('collegeName').value = colMatch[1].trim();
@@ -704,9 +697,8 @@
             });
 
             const uniqueRegs = [...new Set(validRegs)];
-            uniqueRegs.forEach((reg, idx) => {
+            uniqueRegs.forEach((reg) => {
                 let sName = coordNameMap[reg] || "";
-                // Fallback linear regex if coordinate map missed it
                 if (!sName) {
                     const pos = cleanText.indexOf(reg);
                     if (pos !== -1) {
@@ -1337,9 +1329,8 @@
                                     <tr class="bg-gray-100 print:bg-transparent">
                                         <th class="w-16 text-center py-1.5">RNBB</th>
                                         <th class="w-32 text-left py-1.5">REG NO</th>
-                                        <th class="w-48 text-left py-1.5">NAME OF CANDIDATE</th>
                                         <th class="text-left py-1.5">SUBJECT NAME</th>
-                                        <th class="w-24 text-left py-1.5">REMARKS</th>
+                                        <th class="w-28 text-left py-1.5">REMARKS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1352,7 +1343,6 @@
                             <tr class="hover:bg-gray-50 print:bg-transparent">
                                 <td class="text-center py-1.5 text-gray-500">RNBB${sIdx + 1}</td>
                                 <td class="py-1.5 text-sm print:text-xs">${s.regNo}</td>
-                                <td class="py-1.5 text-gray-900">${s.name || ''}</td>
                                 <td class="py-1.5 text-gray-700">${printSubj}</td>
                                 <td class="py-1.5"></td>
                             </tr>
