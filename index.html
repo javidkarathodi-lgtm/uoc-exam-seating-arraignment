@@ -47,10 +47,6 @@
             box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.04), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
             transition: all 0.2s ease;
         }
-        .pro-card:hover {
-            border-color: #cbd5e1;
-            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.06), 0 4px 6px -4px rgba(15, 23, 42, 0.06);
-        }
         
         .custom-file-upload {
             border: 2px dashed #94a3b8;
@@ -76,7 +72,6 @@
 </head>
 <body class="min-h-screen pb-12">
     
-    <!-- Top Executive Navigation Bar -->
     <header class="no-print bg-slate-900 text-white shadow-lg sticky top-0 z-50 border-b border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex justify-between items-center">
             <div class="flex items-center gap-3.5">
@@ -86,7 +81,7 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="font-extrabold text-base sm:text-lg tracking-tight text-white">UniExam SeatPro</span>
-                        <span class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Enterprise</span>
+                        <span class="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">v7 Multi-Session</span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
                         <span>Automated University Examination Suite</span>
@@ -96,7 +91,7 @@
             </div>
             
             <a href="https://in.linkedin.com/in/javidkarathodi" target="_blank" class="flex items-center gap-2 text-xs sm:text-sm font-semibold text-white bg-slate-800 hover:bg-blue-600 border border-slate-700 hover:border-blue-500 px-4 py-2 rounded-xl transition-all duration-200 shadow-sm">
-                <svg class="w-4 h-4 text-blue-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
                 <span>JAVID KARATHODI</span>
             </a>
         </div>
@@ -104,20 +99,26 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
         
-        <!-- Main Control Dashboard -->
         <div class="no-print bg-white rounded-2xl p-6 sm:p-8 mb-6 shadow-sm border border-slate-200/80">
             
-            <!-- Top Banner & College Input -->
+            <!-- Header & Session Switcher Toggle Bar -->
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-100">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Examination Seating & Attendance</h1>
-                    <p class="text-slate-500 text-sm font-medium mt-0.5">Instant room allocation, invigilator mapping & nominal roll generator (CBCSS / FYUG / PG / SDE)</p>
+                    <p class="text-slate-500 text-sm font-medium mt-0.5">Manage FN & AN sessions independently with isolated data storage</p>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <button id="barcodeToggleBtn" onclick="toggleBarcodeMode()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-semibold text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5">
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Session Switcher Pill -->
+                    <div class="bg-slate-100 p-1.5 rounded-2xl flex items-center border border-slate-200 shadow-inner">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3">Session:</span>
+                        <button onclick="switchActiveSession('FN')" id="sessionBtnFN" class="px-4 py-2 rounded-xl font-extrabold text-xs tracking-wider transition-all shadow-sm bg-white text-slate-800">FN (Forenoon)</button>
+                        <button onclick="switchActiveSession('AN')" id="sessionBtnAN" class="px-4 py-2 rounded-xl font-extrabold text-xs tracking-wider transition-all text-slate-500 hover:text-slate-800">AN (Afternoon)</button>
+                    </div>
+
+                    <button id="barcodeToggleBtn" onclick="toggleBarcodeMode()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-semibold text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        Switch to Barcode Exam
+                        Barcode
                     </button>
                 </div>
             </div>
@@ -291,7 +292,7 @@
                 <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 text-slate-400">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
-                <p class="text-base font-bold text-slate-600">No Nominal Rolls Loaded</p>
+                <p class="text-base font-bold text-slate-600">No Nominal Rolls Loaded for <span id="emptySessionLabel">FN</span> Session</p>
                 <p class="text-xs mt-1 text-slate-400">Upload University Examination PDF or CSV files above to generate reports.</p>
             </div>
         </div>
@@ -305,6 +306,12 @@
         if (typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
+
+        let currentSession = 'FN'; // 'FN' or 'AN'
+        let sessionsData = {
+            'FN': { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [] },
+            'AN': { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [] }
+        };
 
         let masterData = [];
         let hallAllocations = [];
@@ -320,6 +327,70 @@
         window.addEventListener('DOMContentLoaded', () => {
             loadFromStorage();
         });
+
+        function switchActiveSession(sessionName) {
+            // Save current state first
+            saveCurrentSessionState();
+            currentSession = sessionName;
+
+            // Update UI buttons
+            const btnFN = document.getElementById('sessionBtnFN');
+            const btnAN = document.getElementById('sessionBtnAN');
+            if (currentSession === 'FN') {
+                btnFN.className = "px-4 py-2 rounded-xl font-extrabold text-xs tracking-wider transition-all shadow-sm bg-white text-slate-800";
+                btnAN.className = "px-4 py-2 rounded-xl font-extrabold text-xs tracking-wider transition-all text-slate-500 hover:text-slate-800";
+                document.getElementById('examSession').value = "FN";
+            } else {
+                btnAN.className = "px-4 py-2 rounded-xl font-extrabold text-xs tracking-wider transition-all shadow-sm bg-white text-slate-800";
+                btnFN.className = "px-4 py-2 rounded-xl font-extrabold text-xs tracking-wider transition-all text-slate-500 hover:text-slate-800";
+                document.getElementById('examSession').value = "AN";
+            }
+
+            // Load new session state
+            loadSessionState(currentSession);
+            saveToStorage();
+        }
+
+        function saveCurrentSessionState() {
+            sessionsData[currentSession] = {
+                masterData: [...masterData],
+                hallAllocations: [...hallAllocations],
+                customCapacities: [...customCapacities],
+                savedRoomDetails: {...savedRoomDetails},
+                fileLogs: [...fileLogs]
+            };
+        }
+
+        function loadSessionState(sessionName) {
+            const data = sessionsData[sessionName] || { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [] };
+            masterData = data.masterData || [];
+            hallAllocations = data.hallAllocations || [];
+            customCapacities = data.customCapacities || [];
+            savedRoomDetails = data.savedRoomDetails || {};
+            fileLogs = data.fileLogs || [];
+
+            if (masterData.length > 0) {
+                renderStatusBox();
+                document.getElementById('tabsContainer').style.display = 'flex';
+                document.getElementById('printContainer').style.display = 'flex';
+                document.getElementById('studentFinderBox').classList.remove('hidden');
+                showTab(activeTab);
+            } else {
+                document.getElementById('fileStatusBox').classList.add('hidden');
+                document.getElementById('studentFinderBox').classList.add('hidden');
+                document.getElementById('tabsContainer').style.display = 'none';
+                document.getElementById('printContainer').style.display = 'none';
+                document.getElementById('emptySessionLabel').textContent = sessionName;
+                document.getElementById('printableArea').innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-slate-400 py-20 no-print font-sans">
+                        <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 text-slate-400">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </div>
+                        <p class="text-base font-bold text-slate-600">No Nominal Rolls Loaded for <span id="emptySessionLabel">${sessionName}</span> Session</p>
+                        <p class="text-xs mt-1 text-slate-400">Upload University Examination PDF or CSV files above to generate reports.</p>
+                    </div>`;
+            }
+        }
 
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -345,6 +416,7 @@
 
         function saveToStorage() {
             try {
+                saveCurrentSessionState();
                 hallAllocations.forEach((h, i) => {
                     savedRoomDetails[i] = { room: h.room, invigilator: h.invigilator };
                 });
@@ -355,16 +427,13 @@
                     examMonth: document.getElementById('examMonth').value,
                     examYear: document.getElementById('examYear').value,
                     examDate: document.getElementById('examDate').value,
-                    examSession: document.getElementById('examSession').value,
                     hallStrength: document.getElementById('hallStrength').value,
-                    masterData,
-                    customCapacities,
-                    savedRoomDetails,
-                    fileLogs
+                    currentSession,
+                    sessionsData
                 };
-                localStorage.setItem('examSeatingAppState_v6', JSON.stringify(state));
+                localStorage.setItem('examSeatingAppState_v7', JSON.stringify(state));
                 const badge = document.getElementById('autoSaveBadge');
-                if (badge && masterData.length > 0) badge.classList.remove('hidden');
+                if (badge) badge.classList.remove('hidden');
             } catch (e) {
                 console.warn("Storage limit reached", e);
             }
@@ -372,7 +441,7 @@
 
         function loadFromStorage() {
             try {
-                const raw = localStorage.getItem('examSeatingAppState_v6');
+                const raw = localStorage.getItem('examSeatingAppState_v7');
                 if (!raw) return;
                 const state = JSON.parse(raw);
                 if (state.collegeName !== undefined) document.getElementById('collegeName').value = state.collegeName;
@@ -381,22 +450,18 @@
                 if (state.examMonth) document.getElementById('examMonth').value = state.examMonth;
                 if (state.examYear) document.getElementById('examYear').value = state.examYear;
                 if (state.examDate) document.getElementById('examDate').value = state.examDate;
-                if (state.examSession) document.getElementById('examSession').value = state.examSession;
                 if (state.hallStrength) document.getElementById('hallStrength').value = state.hallStrength;
                 
-                if (state.masterData && state.masterData.length > 0) {
-                    masterData = state.masterData;
-                    customCapacities = state.customCapacities || [];
-                    savedRoomDetails = state.savedRoomDetails || {};
-                    fileLogs = state.fileLogs || [];
-                    
-                    renderStatusBox();
-                    allocateSeats();
-                    document.getElementById('tabsContainer').style.display = 'flex';
-                    document.getElementById('printContainer').style.display = 'flex';
-                    document.getElementById('studentFinderBox').classList.remove('hidden');
+                if (state.sessionsData) {
+                    sessionsData = state.sessionsData;
+                }
+                if (state.currentSession) {
+                    currentSession = state.currentSession;
+                }
+
+                switchActiveSession(currentSession);
+                if (document.getElementById('autoSaveBadge')) {
                     document.getElementById('autoSaveBadge').classList.remove('hidden');
-                    showTab('rooms');
                 }
             } catch (e) {
                 console.warn("Could not restore state", e);
@@ -422,7 +487,7 @@
                 <div class="font-bold mb-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-emerald-200 pb-3 gap-2">
                     <span class="text-emerald-900 flex items-center gap-2">
                         <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Nominal Rolls Processed (${namedCount} Candidate Names Extracted)
+                        [${currentSession} Session] Nominal Rolls Processed (${namedCount} Names Extracted)
                     </span>
                     <div class="flex flex-wrap items-center gap-2">
                         ${breakdownHTML}
@@ -450,10 +515,10 @@
             });
 
             if (matches.length === 0) {
-                resBox.innerHTML = `<span class="text-red-400">No student found matching "${q}"</span>`;
+                resBox.innerHTML = `<span class="text-red-400">No student found in ${currentSession} matching "${q}"</span>`;
             } else if (matches.length === 1) {
                 const m = matches[0];
-                resBox.innerHTML = `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-lg inline-block"><b>${m.regNo} ${m.name ? `- ${m.name}` : ''}</b> &rarr; <b>Room ${m.room} (Hall ${m.hallNo})</b> | Seat: <b>RNBB${m.seat}</b></span>`;
+                resBox.innerHTML = `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-lg inline-block"><b>[${currentSession}] ${m.regNo} ${m.name ? `- ${m.name}` : ''}</b> &rarr; <b>Room ${m.room} (Hall ${m.hallNo})</b> | Seat: <b>RNBB${m.seat}</b></span>`;
             } else {
                 const preview = matches.slice(0, 3).map(m => `<b>${m.regNo}</b> ${m.name ? `(${m.name})` : ''} [Room ${m.room}, RNBB${m.seat}]`).join(' | ');
                 resBox.innerHTML = `<span class="text-blue-200">${ preview } ${matches.length > 3 ? `... +${matches.length - 3} more` : ''}</span>`;
@@ -472,7 +537,7 @@
                 else if (activeTab === 'paperslips') reportLabel = 'Paperwise attendance slips print';
                 else reportLabel = 'Exam report print';
             }
-            return `${rawDate} ${totalCount} ${reportLabel}`;
+            return `${rawDate} ${currentSession} ${totalCount} ${reportLabel}`;
         }
 
         function getSortedQuestionPapers() {
@@ -491,8 +556,8 @@
             isBarcodeMode = !isBarcodeMode;
             const btn = document.getElementById('barcodeToggleBtn');
             btn.innerHTML = isBarcodeMode 
-                ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Switch to Non-Barcode' 
-                : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Switch to Barcode Exam';
+                ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Non-Barcode' 
+                : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Barcode';
             
             if(isBarcodeMode) {
                 btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
@@ -510,21 +575,9 @@
             customCapacities = [];
             savedRoomDetails = {};
             fileLogs = [];
-            localStorage.removeItem('examSeatingAppState_v6');
-            document.title = 'Exam Seating Arrangement System';
-            document.getElementById('fileStatusBox').classList.add('hidden');
-            document.getElementById('studentFinderBox').classList.add('hidden');
-            document.getElementById('autoSaveBadge').classList.add('hidden');
-            document.getElementById('printableArea').innerHTML = `
-                <div class="flex flex-col items-center justify-center h-full text-slate-400 py-20 no-print font-sans">
-                    <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 text-slate-400">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </div>
-                    <p class="text-base font-bold text-slate-600">All Data Cleared</p>
-                    <p class="text-xs mt-1 text-slate-400">Upload Nominal Roll PDF/CSV files to start a fresh session.</p>
-                </div>`;
-            document.getElementById('tabsContainer').style.display = 'none';
-            document.getElementById('printContainer').style.display = 'none';
+            sessionsData[currentSession] = { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [] };
+            saveToStorage();
+            loadSessionState(currentSession);
         }
 
         async function processFiles() {
@@ -539,7 +592,7 @@
             document.getElementById('printableArea').innerHTML = `
                 <div class="flex flex-col items-center justify-center h-full text-blue-600 py-20 no-print font-sans">
                     <svg class="animate-spin w-10 h-10 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <p class="text-base font-bold">Scanning Nominal Rolls & Candidate Names...</p>
+                    <p class="text-base font-bold">Scanning Nominal Rolls for ${currentSession} Session...</p>
                 </div>`;
 
             for (let file of files) {
@@ -562,7 +615,6 @@
                 document.getElementById('printableArea').innerHTML = `
                     <div class="flex flex-col items-center justify-center h-full text-red-500 py-20 no-print font-sans">
                         <p class="text-lg font-bold">No Valid Register Numbers Found</p>
-                        <p class="text-xs mt-1 text-slate-500">Please verify the uploaded PDF/CSV file format.</p>
                     </div>`;
                 return;
             }
@@ -668,10 +720,6 @@
             const dateMatch = cleanText.match(/(?:Exam Date|Date of Examination)\s*:?\s*\|?\s*(\d{2}[\.\-]\d{2}[\.\-]\d{4})\s*(\d{2}:\d{2}\s*[AP]M)?/i);
             if (dateMatch) {
                 document.getElementById('examDate').value = dateMatch[1].replace(/\./g, '-');
-                if (dateMatch[2]) {
-                    const timeStr = dateMatch[2].toUpperCase();
-                    document.getElementById('examSession').value = (timeStr.includes('PM') && !timeStr.startsWith('12:')) ? 'AN' : 'FN';
-                }
             }
 
             if (/4\/202\d/i.test(cleanText) || /April/i.test(cleanText)) document.getElementById('examMonth').value = "April";
@@ -914,7 +962,7 @@
 
         function printQuestionPapersOnly() {
             const sortedQPs = getSortedQuestionPapers();
-            const dateStr = document.getElementById('examDate').value + " " + document.getElementById('examSession').value;
+            const dateStr = document.getElementById('examDate').value + " " + currentSession;
             const fileName = getFormattedFileName('Question papers print');
             const orient = document.getElementById('pdfOrientation').value;
             const colHeader = getCollegeHeaderHtml();
@@ -953,7 +1001,7 @@
                 </head>
                 <body onload="setTimeout(() => { window.print(); }, 400)">
                     ${colHeader}
-                    <h2>QUESTION PAPERS TO BE PRINTED (A-Z)</h2>
+                    <h2>[${currentSession}] QUESTION PAPERS TO BE PRINTED (A-Z)</h2>
                     <p>Date of Exam : ${dateStr} &nbsp;|&nbsp; Total Strength : ${totalQP}</p>
                     <table class="table-bordered">
                         <thead>
@@ -989,7 +1037,7 @@
             }
             
             const container = document.getElementById('printableArea');
-            const dateStr = document.getElementById('examDate').value + " " + document.getElementById('examSession').value;
+            const dateStr = document.getElementById('examDate').value + " " + currentSession;
             const semStr = document.getElementById('examName').value;
             const monthStr = document.getElementById('examMonth').value;
             const yearStr = document.getElementById('examYear').value;
@@ -1004,7 +1052,7 @@
                         <div class="flex items-center gap-2.5">
                             <div class="bg-blue-600 text-white p-2 rounded-xl shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
                             <div>
-                                <h2 class="text-lg font-extrabold text-slate-800">Room & Invigilator Allocation</h2>
+                                <h2 class="text-lg font-extrabold text-slate-800">[${currentSession} Session] Room & Invigilator Allocation</h2>
                                 <p class="text-xs text-slate-400">Customize room numbers, invigilators, and seat capacity per hall</p>
                             </div>
                         </div>
@@ -1092,7 +1140,7 @@
                 html += `
                     <div class="text-center mb-5">
                         ${colHeader}
-                        <h2 class="text-2xl font-bold uppercase tracking-wide">SEAT ARRANGEMENT - UNIVERSITY EXAMINATION</h2>
+                        <h2 class="text-2xl font-bold uppercase tracking-wide">[${currentSession}] SEAT ARRANGEMENT - UNIVERSITY EXAMINATION</h2>
                         <p class="font-bold text-base mt-1">Date of Examination: ${dateStr}</p>
                     </div>
                     <table class="table-bordered text-sm font-bold shadow-sm">
@@ -1154,7 +1202,7 @@
                 html += `
                     <div class="text-center mb-5">
                         ${colHeader}
-                        <h2 class="text-2xl font-bold underline uppercase tracking-wide">EXAM SUMMARY - TO: EXAM CHIEF</h2>
+                        <h2 class="text-2xl font-bold underline uppercase tracking-wide">[${currentSession}] EXAM SUMMARY - TO: EXAM CHIEF</h2>
                     </div>
                     <p class="font-bold mb-3 text-base">Date of Exam : ${dateStr}</p>
                     
@@ -1287,7 +1335,7 @@
                     html += `
                         <div class="page-break-hall mb-8 pb-6 border-b border-gray-200 last:border-b-0 print:border-none print:mb-0 print:pb-0">
                             ${colHeader}
-                            <h2 class="text-xl font-bold mb-4 uppercase tracking-wide text-center print:text-base print:mb-1">EXAM DETAILS - TO: INVIGILATOR</h2>
+                            <h2 class="text-xl font-bold mb-4 uppercase tracking-wide text-center print:text-base print:mb-1">[${currentSession}] EXAM DETAILS - TO: INVIGILATOR</h2>
                             
                             <table class="table-bordered w-full mb-5 text-sm font-bold bg-gray-50 print:mb-2 print:text-xs">
                                 <tr><td class="w-1/4 py-1.5 px-3">Name of Invigilator</td><td class="py-1.5 px-3">${hall.invigilator || ''}</td></tr>
@@ -1295,7 +1343,7 @@
                                 <tr><td class="w-1/4 py-1.5 px-3">Hall No:</td><td class="py-1.5 px-3">${hall.hallNo}</td></tr>
                                 <tr><td class="w-1/4 py-1.5 px-3">No of Students</td><td class="py-1.5 px-3">${hall.students.length}</td></tr>
                                 <tr><td class="w-1/4 py-1.5 px-3">Exam Type</td><td class="py-1.5 px-3">${getHallType(hall)}</td></tr>
-                                <tr><td class="w-1/4 py-1.5 px-3">Exam Date</td><td class="py-1.5 px-3">${dateStr}</td></tr>
+                                <tr><td class="w-1/4 py-1.5 px-3">Exam Date & Session</td><td class="py-1.5 px-3">${dateStr}</td></tr>
                             </table>
 
                             <div class="font-bold mb-2 text-xs uppercase tracking-wider bg-gray-200 py-1 px-2 rounded-t print:bg-transparent print:mb-1 print:p-0">SUBJECTS AND QUESTION PAPER COUNT (A-Z)</div>
@@ -1419,7 +1467,7 @@
                             <div class="page-break-paper avoid-break border-2 border-gray-800 p-6 mb-8 rounded-xl bg-white shadow-sm cambria-font">
                                 <div class="text-center mb-3">
                                     <h2 class="text-base font-extrabold uppercase tracking-wide">University of Calicut</h2>
-                                    <h2 class="text-sm font-bold uppercase">${semStr} Examination ${monthStr} ${yearStr}</h2>
+                                    <h2 class="text-sm font-bold uppercase">${semStr} Examination ${monthStr} ${yearStr} ([${currentSession}])</h2>
                                     <h2 class="text-base font-extrabold uppercase underline tracking-wide mt-1">Nominal Roll / Room-wise Attendance Sheet</h2>
                                 </div>
                                 ${colHeader ? `<div class="mb-2">${colHeader}</div>` : ''}
