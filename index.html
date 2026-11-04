@@ -164,7 +164,7 @@
                 <div>
                     <div class="flex items-center gap-2.5">
                         <span class="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">UniExam SeatPro</span>
-                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">v8.6 Scheme Room Breakdown</span>
+                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">v8.8 Multi-Subject & Scheme Reader</span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
                         <span>Smart University Examination Suite</span>
@@ -188,7 +188,7 @@
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-100">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Examination Seating & Nominal Roll Suite</h1>
-                    <p class="text-slate-500 text-sm font-medium mt-1">Subjects allocated in exact Question Paper (A-Z) order • Students kept in exact Nominal Roll order</p>
+                    <p class="text-slate-500 text-sm font-medium mt-1">Reads multiple subjects/schemes inside a single file accurately • Preserves exact Nominal Roll order</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
@@ -327,7 +327,7 @@
                 </div>
             </div>
 
-            <!-- File Status (Now displays Total Students + Scheme-wise Rooms Required) -->
+            <!-- File Status (Displays Students, Subjects/Papers, and Rooms Required per scheme) -->
             <div id="fileStatusBox" class="hidden mb-6 p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-sm text-emerald-950"></div>
 
             <!-- Report Navigation Pills -->
@@ -535,7 +535,7 @@
                     currentSession,
                     sessionsData
                 };
-                localStorage.setItem('examSeatingAppState_v8.6', JSON.stringify(state));
+                localStorage.setItem('examSeatingAppState_v8.8', JSON.stringify(state));
                 const badge = document.getElementById('autoSaveBadge');
                 if (badge) badge.classList.remove('hidden');
             } catch (e) {
@@ -545,7 +545,7 @@
 
         function loadFromStorage() {
             try {
-                const keys = ['examSeatingAppState_v8.6', 'examSeatingAppState_v8.5', 'examSeatingAppState_v8.4', 'examSeatingAppState_v8.3', 'examSeatingAppState_v8.2', 'examSeatingAppState_v8.1', 'examSeatingAppState_v8.0', 'examSeatingAppState_v7.9', 'examSeatingAppState_v7.8', 'examSeatingAppState_v7.7'];
+                const keys = ['examSeatingAppState_v8.8', 'examSeatingAppState_v8.7', 'examSeatingAppState_v8.6', 'examSeatingAppState_v8.5', 'examSeatingAppState_v8.4', 'examSeatingAppState_v8.3', 'examSeatingAppState_v8.2', 'examSeatingAppState_v8.1', 'examSeatingAppState_v8.0'];
                 let raw = null;
                 for (const k of keys) {
                     raw = localStorage.getItem(k);
@@ -580,12 +580,16 @@
         function renderStatusBox() {
             const statusBox = document.getElementById('fileStatusBox');
             let schemeTotals = { 'CBCSS': 0, 'FYUG': 0, 'PG': 0, 'SDE': 0 };
+            let schemePapers = { 'CBCSS': new Set(), 'FYUG': new Set(), 'PG': new Set(), 'SDE': new Set() };
             let schemeRooms = { 'CBCSS': new Set(), 'FYUG': new Set(), 'PG': new Set(), 'SDE': new Set() };
             let namedCount = 0;
 
             masterData.forEach(s => {
-                if(schemeTotals[s.scheme] !== undefined) schemeTotals[s.scheme]++;
-                if(s.name && s.name.trim().length > 1) namedCount++;
+                if (schemeTotals[s.scheme] !== undefined) {
+                    schemeTotals[s.scheme]++;
+                    schemePapers[s.scheme].add(s.subject + "||" + s.type);
+                }
+                if (s.name && s.name.trim().length > 1) namedCount++;
             });
 
             hallAllocations.forEach((hall, idx) => {
@@ -599,24 +603,28 @@
             let breakdownHTML = '';
             let roomBreakdownParts = [];
 
-            if(schemeTotals['CBCSS'] > 0) {
+            if (schemeTotals['CBCSS'] > 0) {
+                const pCnt = schemePapers['CBCSS'].size;
                 const rCnt = schemeRooms['CBCSS'].size;
-                breakdownHTML += `<span class="bg-blue-100 text-blue-800 border border-blue-200 px-2.5 py-1 rounded-lg text-xs font-bold">CBCSS: ${schemeTotals['CBCSS']}</span>`;
+                breakdownHTML += `<span class="bg-blue-100 text-blue-800 border border-blue-200 px-2.5 py-1 rounded-lg text-xs font-bold">CBCSS: ${schemeTotals['CBCSS']} <span class="text-[10px] font-semibold opacity-80">(${pCnt} ${pCnt === 1 ? 'Paper' : 'Papers'} • ${rCnt} ${rCnt === 1 ? 'Rm' : 'Rms'})</span></span>`;
                 roomBreakdownParts.push(`CBCSS: ${rCnt}`);
             }
-            if(schemeTotals['FYUG'] > 0) {
+            if (schemeTotals['FYUG'] > 0) {
+                const pCnt = schemePapers['FYUG'].size;
                 const rCnt = schemeRooms['FYUG'].size;
-                breakdownHTML += `<span class="bg-purple-100 text-purple-800 border border-purple-200 px-2.5 py-1 rounded-lg text-xs font-bold">FYUG: ${schemeTotals['FYUG']}</span>`;
+                breakdownHTML += `<span class="bg-purple-100 text-purple-800 border border-purple-200 px-2.5 py-1 rounded-lg text-xs font-bold">FYUG: ${schemeTotals['FYUG']} <span class="text-[10px] font-semibold opacity-80">(${pCnt} ${pCnt === 1 ? 'Paper' : 'Papers'} • ${rCnt} ${rCnt === 1 ? 'Rm' : 'Rms'})</span></span>`;
                 roomBreakdownParts.push(`FYUG: ${rCnt}`);
             }
-            if(schemeTotals['PG'] > 0) {
+            if (schemeTotals['PG'] > 0) {
+                const pCnt = schemePapers['PG'].size;
                 const rCnt = schemeRooms['PG'].size;
-                breakdownHTML += `<span class="bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-1 rounded-lg text-xs font-bold">PG: ${schemeTotals['PG']}</span>`;
+                breakdownHTML += `<span class="bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-1 rounded-lg text-xs font-bold">PG: ${schemeTotals['PG']} <span class="text-[10px] font-semibold opacity-80">(${pCnt} ${pCnt === 1 ? 'Paper' : 'Papers'} • ${rCnt} ${rCnt === 1 ? 'Rm' : 'Rms'})</span></span>`;
                 roomBreakdownParts.push(`PG: ${rCnt}`);
             }
-            if(schemeTotals['SDE'] > 0) {
+            if (schemeTotals['SDE'] > 0) {
+                const pCnt = schemePapers['SDE'].size;
                 const rCnt = schemeRooms['SDE'].size;
-                breakdownHTML += `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg text-xs font-bold">SDE: ${schemeTotals['SDE']}</span>`;
+                breakdownHTML += `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg text-xs font-bold">SDE: ${schemeTotals['SDE']} <span class="text-[10px] font-semibold opacity-80">(${pCnt} ${pCnt === 1 ? 'Paper' : 'Papers'} • ${rCnt} ${rCnt === 1 ? 'Rm' : 'Rms'})</span></span>`;
                 roomBreakdownParts.push(`SDE: ${rCnt}`);
             }
 
@@ -634,7 +642,7 @@
                         <span class="bg-emerald-700 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm">Total: ${masterData.length}</span>
                         <span class="bg-indigo-900 text-white px-3 py-1 rounded-lg text-xs font-extrabold shadow-sm flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                            <span>Rooms Required: ${totalRoomsReq}<span class="text-indigo-200 font-bold ml-1">${roomBreakdownText}</span></span>
+                            <span>Rooms Required: ${totalRoomsReq}<span class="text-amber-300 font-extrabold ml-1">${roomBreakdownText}</span></span>
                         </span>
                     </div>
                 </div>
@@ -685,6 +693,7 @@
             return `${rawDate} ${currentSession} ${totalCount} ${reportLabel}`;
         }
 
+        // Keeps distinct Question Papers separate by Subject + Type (REG vs SDE)
         function getSortedQuestionPapers() {
             const regQPs = [];
             const sdeQPs = [];
@@ -693,7 +702,7 @@
                 const isSde = (s.type === 'SDE' || s.scheme === 'SDE');
                 const targetList = isSde ? sdeQPs : regQPs;
                 const displayType = isSde ? 'SDE' : 'REG';
-                let existing = targetList.find(item => item.subject === s.subject);
+                let existing = targetList.find(item => item.subject === s.subject && item.type === displayType);
                 if (existing) {
                     existing.count++;
                 } else {
@@ -776,10 +785,11 @@
                     }
                 }
 
+                // Deduplicate by Subject + Type + RegNo
                 const uniqueMaster = [];
                 const seenEntries = new Set();
                 masterData.forEach(item => {
-                    const entryKey = `${item.subject}||${item.regNo}`;
+                    const entryKey = `${item.subject}||${item.type}||${item.regNo}`;
                     if (!seenEntries.has(entryKey)) {
                         seenEntries.add(entryKey);
                         uniqueMaster.push(item);
@@ -822,6 +832,48 @@
             return s.toUpperCase();
         }
 
+        // Extracts subject, paper code (e.g. AFU6B18 vs BCM6B16), and scheme from a block of text
+        function extractContextFromBlock(blockText, fallbackSubject, fallbackScheme, fallbackType, fallbackSlot, fileName) {
+            let subj = fallbackSubject;
+            let scheme = fallbackScheme;
+            let bType = fallbackType;
+            let slot = fallbackSlot;
+
+            if (/SDE/i.test(blockText)) {
+                scheme = "SDE";
+                bType = "SDE";
+            } else if (/FYUG/i.test(blockText)) {
+                scheme = "FYUG";
+                bType = "REG";
+            } else if (/CBCSS-PG/i.test(blockText) || /\bPG\b/i.test(blockText)) {
+                scheme = "PG";
+                bType = "REG";
+            } else if (/CBCSS/i.test(blockText) || /AFZAL/i.test(blockText)) {
+                if (scheme !== "SDE") {
+                    scheme = "CBCSS";
+                    bType = "REG";
+                }
+            }
+
+            const slotMatch = blockText.match(/Slot\s*:?\s*\|?\s*(.*?)(?=Date of Examination|Exam Date|$)/i);
+            if (slotMatch && slotMatch[1] && slotMatch[1].trim()) {
+                slot = slotMatch[1].trim();
+            }
+
+            const paperMatch = blockText.match(/Paper Details\s*:?\s*(.*?)(?=Exam Date|Date of Examination|SI\.No|Sl\.No|#|$)/i);
+            const courseMatch = blockText.match(/Course\s*:?\s*\|?\s*([^\[]+\[[^\]]+\])/i);
+
+            if (paperMatch && paperMatch[1].trim()) {
+                subj = "PAPER DETAILS: " + paperMatch[1].trim().replace(/\s*\|\s*/g, ' ');
+            } else if (courseMatch && courseMatch[1].trim()) {
+                subj = "PAPER DETAILS: " + courseMatch[1].trim() + (slot ? ` --(${slot})` : "");
+            }
+
+            return { subject: subj.toUpperCase(), scheme, type: bType, slot };
+        }
+
+        // Page-by-page & Row-by-row PDF Parser:
+        // Accurately separates multiple subjects/codes (e.g. AFU6B18 vs BCM6B16) or schemes inside the same PDF!
         async function processPDF(file) {
             const arrayBuffer = await file.arrayBuffer();
             let pdf;
@@ -830,10 +882,23 @@
             } catch (e) {
                 pdf = await pdfjsLib.getDocument({data: arrayBuffer, disableWorker: true}).promise;
             }
-            
-            let fullText = "";
-            let coordNameMap = {};
+
             const singleRegTest = /^[A-Z]{4}[A-Z0-9]{2,5}\d{2,4}$/;
+            const regRegex = /\b[A-Z]{4}[A-Z0-9]{2,5}\d{2,4}\b/g;
+
+            // File-level defaults
+            let currentScheme = document.getElementById('scheme').value;
+            let currentBroadType = "REG";
+            if (/SDE/i.test(file.name)) { currentScheme = "SDE"; currentBroadType = "SDE"; }
+            else if (/FYUG/i.test(file.name)) { currentScheme = "FYUG"; }
+            else if (/PG/i.test(file.name)) { currentScheme = "PG"; }
+            else if (/CBCSS/i.test(file.name)) { currentScheme = "CBCSS"; }
+
+            const fnMatch = file.name.match(/202\d_(.*)\.pdf/i);
+            let currentSubject = ("PAPER DETAILS: " + (fnMatch ? fnMatch[1].trim() : file.name.replace(/\.pdf$/i, ''))).toUpperCase();
+            let currentSlot = "";
+
+            let fileSubjectsCount = {}; // Track each distinct subject extracted from this file
 
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
@@ -853,16 +918,31 @@
                     row.items.push({ x: x, str: str });
                 });
 
+                // Top-to-bottom order
                 rows.sort((a, b) => b.y - a.y);
+
+                let pageHeaderBuffer = "";
+                let pageFullText = "";
 
                 rows.forEach(r => {
                     r.items.sort((a, b) => a.x - b.x);
                     const rowLine = r.items.map(it => it.str).join(" ");
-                    fullText += rowLine + "\n";
+                    pageFullText += rowLine + " ";
 
+                    // If a row contains header keywords (Paper Details, Course, Slot, Scheme), update current active context immediately!
+                    if (/(?:Paper Details|Course\s*:|Slot\s*:|SDE|FYUG|CBCSS|AFZAL)/i.test(rowLine)) {
+                        pageHeaderBuffer += " " + rowLine;
+                        const updated = extractContextFromBlock(pageHeaderBuffer, currentSubject, currentScheme, currentBroadType, currentSlot, file.name);
+                        currentSubject = updated.subject;
+                        currentScheme = updated.scheme;
+                        currentBroadType = updated.type;
+                        currentSlot = updated.slot;
+                    }
+
+                    // Extract Register Numbers and Names on this row
                     for (let k = 0; k < r.items.length; k++) {
                         const token = r.items[k].str.replace(/\s+/g, '');
-                        if (singleRegTest.test(token) && !/^(PAGE|DATE|SLOT|TIME|EXAM|CORE|FYUG|CBCS|SDEC)/i.test(token)) {
+                        if (singleRegTest.test(token) && !/^(PAGE|DATE|SLOT|TIME|EXAM|CORE|FYUG|CBCS|SDEC)/i.test(token) && /^[A-Z]{4}[A-Z0]{2,4}\d{2,4}$/.test(token)) {
                             let nameParts = [];
                             for (let m = k + 1; m < r.items.length; m++) {
                                 const nextStr = r.items[m].str.trim();
@@ -870,108 +950,79 @@
                                 if (singleRegTest.test(nextStr)) break;
                                 nameParts.push(nextStr);
                             }
-                            const cleaned = cleanExtractedName(nameParts.join(" "));
-                            if (cleaned.length > 1) {
-                                coordNameMap[token] = cleaned;
-                            }
+                            const cleanedName = cleanExtractedName(nameParts.join(" "));
+
+                            // If subject still doesn't have the paper code, check if the regNo prefix hints at a distinct course or keep currentSubject
+                            masterData.push({
+                                regNo: token,
+                                name: cleanedName,
+                                subject: currentSubject,
+                                slot: currentSlot,
+                                type: currentBroadType,
+                                scheme: currentScheme
+                            });
+
+                            const logKey = `${currentScheme} • ${currentSubject}`;
+                            fileSubjectsCount[logKey] = (fileSubjectsCount[logKey] || 0) + 1;
+                            // Reset header buffer once students start so a new section mid-page can start fresh
+                            pageHeaderBuffer = "";
                         }
                     }
                 });
-            }
 
-            const cleanText = fullText.replace(/\s+/g, " ");
-
-            const colMatch = cleanText.match(/College\s*:\s*([^,\n]+(?:,[^,\n]+)?)(?=\s+Course|\s+Paper|\s+Slot|\s+Date)/i);
-            if (colMatch && colMatch[1] && !document.getElementById('collegeName').value.trim()) {
-                document.getElementById('collegeName').value = colMatch[1].trim();
-            }
-
-            if (/First\s+Semester/i.test(cleanText) || /First\s+Semester/i.test(file.name)) document.getElementById('examName').value = "First Sem";
-            else if (/Second\s+Semester/i.test(cleanText) || /Second\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Second Sem";
-            else if (/Third\s+Semester/i.test(cleanText) || /Third\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Third Sem";
-            else if (/Fourth\s+Semester/i.test(cleanText) || /Fourth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Fourth Sem";
-            else if (/Fifth\s+Semester/i.test(cleanText) || /Fifth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Fifth Sem";
-            else if (/Sixth\s+Semester/i.test(cleanText) || /Sixth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Sixth Sem";
-
-            let schemeType = document.getElementById('scheme').value;
-            let broadType = "REG";
-            
-            if (/SDE/i.test(cleanText) || /SDE/i.test(file.name)) {
-                schemeType = "SDE";
-                broadType = "SDE";
-            } else if (/FYUG/i.test(cleanText) || /FYUG/i.test(file.name)) {
-                schemeType = "FYUG";
-                document.getElementById('scheme').value = "FYUG";
-            } else if (/CBCSS-PG/i.test(cleanText) || /PG/i.test(file.name)) {
-                schemeType = "PG";
-            } else if (/CBCSS/i.test(cleanText)) {
-                schemeType = "CBCSS";
-            }
-
-            const dateMatch = cleanText.match(/(?:Exam Date|Date of Examination)\s*:?\s*\|?\s*(\d{2}[\.\-]\d{2}[\.\-]\d{4})\s*(\d{2}:\d{2}\s*[AP]M)?/i);
-            if (dateMatch) {
-                document.getElementById('examDate').value = dateMatch[1].replace(/\./g, '-');
-            }
-
-            if (/4\/202\d/i.test(cleanText) || /April/i.test(cleanText)) document.getElementById('examMonth').value = "April";
-            else if (/11\/202\d/i.test(cleanText) || /November/i.test(cleanText)) document.getElementById('examMonth').value = "November";
-
-            let subjectName = file.name.replace(/\.pdf$/i, '');
-            const paperMatch = cleanText.match(/Paper Details\s*:?\s*(.*?)(?=Exam Date|SI\.No|Sl\.No|#)/i);
-            const courseMatch = cleanText.match(/Course\s*:?\s*\|?\s*([^\[]+\[[^\]]+\])/i);
-            const slotMatch = cleanText.match(/Slot\s*:?\s*\|?\s*(.*?)(?=Date of Examination)/i);
-            const extractedSlot = slotMatch && slotMatch[1] ? slotMatch[1].trim() : "";
-
-            if (paperMatch && paperMatch[1].trim()) subjectName = "PAPER DETAILS: " + paperMatch[1].trim().replace(/\s*\|\s*/g, ' ');
-            else if (courseMatch && courseMatch[1].trim()) subjectName = "PAPER DETAILS: " + courseMatch[1].trim() + (extractedSlot ? ` --(${extractedSlot})` : "");
-            else {
-                const fnMatch = file.name.match(/202\d_(.*)\.pdf/i);
-                if (fnMatch) subjectName = "PAPER DETAILS: " + fnMatch[1].trim();
-            }
-
-            const regRegex = /\b[A-Z]{4}[A-Z0-9]{2,5}\d{2,4}\b/g;
-            const rawMatches = cleanText.match(regRegex) || [];
-            const validRegs = rawMatches.filter(token => {
-                if (/^(PAGE|DATE|SLOT|TIME|EXAM|CORE|FYUG|CBCS|SDEC)/i.test(token)) return false;
-                return /^[A-Z]{4}[A-Z0]{2,4}\d{2,4}$/.test(token);
-            });
-
-            const uniqueRegs = [...new Set(validRegs)];
-            uniqueRegs.forEach((reg) => {
-                let sName = coordNameMap[reg] || "";
-                if (!sName) {
-                    const pos = cleanText.indexOf(reg);
-                    if (pos !== -1) {
-                        const snippet = cleanText.substring(pos + reg.length, pos + reg.length + 80);
-                        sName = cleanExtractedName(snippet.split(/\d/)[0]);
-                    }
+                const cleanPage = pageFullText.replace(/\s+/g, " ");
+                const colMatch = cleanPage.match(/College\s*:\s*([^,\n]+(?:,[^,\n]+)?)(?=\s+Course|\s+Paper|\s+Slot|\s+Date)/i);
+                if (colMatch && colMatch[1] && !document.getElementById('collegeName').value.trim()) {
+                    document.getElementById('collegeName').value = colMatch[1].trim();
                 }
-                masterData.push({ 
-                    regNo: reg.trim(), 
-                    name: sName,
-                    subject: subjectName.toUpperCase(), 
-                    slot: extractedSlot,
-                    type: broadType, 
-                    scheme: schemeType 
-                });
-            });
 
-            fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700">${file.name}</span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${schemeType} • ${uniqueRegs.length} Students</span></div>`);
+                if (/First\s+Semester/i.test(cleanPage) || /First\s+Semester/i.test(file.name)) document.getElementById('examName').value = "First Sem";
+                else if (/Second\s+Semester/i.test(cleanPage) || /Second\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Second Sem";
+                else if (/Third\s+Semester/i.test(cleanPage) || /Third\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Third Sem";
+                else if (/Fourth\s+Semester/i.test(cleanPage) || /Fourth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Fourth Sem";
+                else if (/Fifth\s+Semester/i.test(cleanPage) || /Fifth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Fifth Sem";
+                else if (/Sixth\s+Semester/i.test(cleanPage) || /Sixth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Sixth Sem";
+
+                if (currentScheme === "FYUG") {
+                    document.getElementById('scheme').value = "FYUG";
+                }
+
+                const dateMatch = cleanPage.match(/(?:Exam Date|Date of Examination)\s*:?\s*\|?\s*(\d{2}[\.\-]\d{2}[\.\-]\d{4})\s*(\d{2}:\d{2}\s*[AP]M)?/i);
+                if (dateMatch) {
+                    document.getElementById('examDate').value = dateMatch[1].replace(/\./g, '-');
+                }
+
+                if (/4\/202\d/i.test(cleanPage) || /April/i.test(cleanPage)) document.getElementById('examMonth').value = "April";
+                else if (/11\/202\d/i.test(cleanPage) || /November/i.test(cleanPage)) document.getElementById('examMonth').value = "November";
+            }
+
+            // Log each distinct subject found inside this PDF file
+            const entries = Object.entries(fileSubjectsCount);
+            if (entries.length <= 1) {
+                const totalInFile = entries.length === 1 ? entries[0][1] : 0;
+                fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700">${file.name}</span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${currentScheme} • ${totalInFile} Students</span></div>`);
+            } else {
+                entries.forEach(([key, cnt]) => {
+                    const [sch, subjTitle] = key.split(' • ');
+                    fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700">${file.name} &rarr; <span class="text-indigo-700">${subjTitle.replace(/^PAPER DETAILS:\s*/i, '')}</span></span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${sch} • ${cnt} Students</span></div>`);
+                });
+            }
         }
 
+        // CSV Parser: Also supports optional 3rd/4th columns for Subject/Paper and Scheme if multiple papers are in one CSV
         async function processCSV(file) {
             const text = await file.text();
             const lines = text.split('\n');
             let rawName = file.name.replace(/\.csv$/i, '');
             const fnMatch = rawName.match(/202\d_(.*)/i);
-            let subjectName = "PAPER DETAILS: " + (fnMatch ? fnMatch[1].trim() : rawName).toUpperCase();
+            let defaultSubject = "PAPER DETAILS: " + (fnMatch ? fnMatch[1].trim() : rawName).toUpperCase();
             
-            let schemeType = document.getElementById('scheme').value;
-            let broadType = "REG";
-            if (/SDE/i.test(rawName)) { schemeType = "SDE"; broadType = "SDE"; }
-            else if (/FYUG/i.test(rawName)) schemeType = "FYUG";
-            else if (/PG/i.test(rawName)) schemeType = "PG";
-            else if (/CBCSS/i.test(rawName)) schemeType = "CBCSS";
+            let defaultScheme = document.getElementById('scheme').value;
+            let defaultBroadType = "REG";
+            if (/SDE/i.test(rawName)) { defaultScheme = "SDE"; defaultBroadType = "SDE"; }
+            else if (/FYUG/i.test(rawName)) defaultScheme = "FYUG";
+            else if (/PG/i.test(rawName)) defaultScheme = "PG";
+            else if (/CBCSS/i.test(rawName)) defaultScheme = "CBCSS";
 
             let count = 0;
             const seenInCsv = new Set();
@@ -981,13 +1032,25 @@
                 const cols = line.split(',');
                 const reg = cols[0] ? cols[0].trim().toUpperCase() : "";
                 const studentName = cols[1] ? cols[1].replace(/["']/g, '').trim().toUpperCase() : "";
-                if (reg && /^[A-Z]{4}/i.test(reg) && !seenInCsv.has(reg)) {
-                    seenInCsv.add(reg);
-                    masterData.push({ regNo: reg, name: studentName, subject: subjectName, slot: "", type: broadType, scheme: schemeType });
+                const rowSubj = cols[2] && cols[2].trim() ? ("PAPER DETAILS: " + cols[2].replace(/["']/g, '').trim().toUpperCase()) : defaultSubject;
+                let rowScheme = defaultScheme;
+                let rowType = defaultBroadType;
+                if (cols[3] && cols[3].trim()) {
+                    const sCol = cols[3].replace(/["']/g, '').trim().toUpperCase();
+                    if (/SDE/.test(sCol)) { rowScheme = "SDE"; rowType = "SDE"; }
+                    else if (/FYUG/.test(sCol)) { rowScheme = "FYUG"; rowType = "REG"; }
+                    else if (/PG/.test(sCol)) { rowScheme = "PG"; rowType = "REG"; }
+                    else if (/CBCSS/.test(sCol)) { rowScheme = "CBCSS"; rowType = "REG"; }
+                }
+
+                const key = `${rowSubj}||${reg}`;
+                if (reg && /^[A-Z]{4}/i.test(reg) && !seenInCsv.has(key)) {
+                    seenInCsv.add(key);
+                    masterData.push({ regNo: reg, name: studentName, subject: rowSubj, slot: "", type: rowType, scheme: rowScheme });
                     count++;
                 }
             });
-            fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700">${file.name}</span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${schemeType} • ${count} Students</span></div>`);
+            fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700">${file.name}</span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${defaultScheme} • ${count} Students</span></div>`);
         }
 
         function allocateSeats() {
