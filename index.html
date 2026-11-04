@@ -164,7 +164,7 @@
                 <div>
                     <div class="flex items-center gap-2.5">
                         <span class="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">UniExam SeatPro</span>
-                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">v9.1 Strict 1-File = 1-Paper</span>
+                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">v9.2 Smart File & Date Guard</span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
                         <span>Smart University Examination Suite</span>
@@ -188,7 +188,7 @@
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-100">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Examination Seating & Nominal Roll Suite</h1>
-                    <p class="text-slate-500 text-sm font-medium mt-1">Each uploaded Nominal Roll file is treated as a separate Paper (even if the subject name is identical)</p>
+                    <p class="text-slate-500 text-sm font-medium mt-1">Smart file verification with duplicate upload detection and exam date mismatch warnings</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
@@ -273,7 +273,7 @@
                             </div>
                             <div class="w-1/3">
                                 <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Session</label>
-                                <select id="examSession" onchange="switchActiveSession(this.value);" class="w-full border border-purple-200 rounded-xl px-2 py-1.5 text-sm focus:border-purple-500 focus:outline-none bg-purple-50 font-extrabold text-purple-700">
+                                <select id="examSession" onchange="switchActiveSession(this.value);" class="w-full border border-purple-200 rounded-xl px-2.5 py-1.5 text-sm focus:border-purple-500 focus:outline-none bg-purple-50 font-extrabold text-purple-700">
                                     <option value="FN">FN</option>
                                     <option value="AN">AN</option>
                                 </select>
@@ -327,7 +327,7 @@
                 </div>
             </div>
 
-            <!-- File Status (Displays Students, Distinct Papers, and Rooms Required per scheme) -->
+            <!-- File Status (Displays Duplicate / Date Mismatch Warnings + Verification) -->
             <div id="fileStatusBox" class="hidden mb-6 p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-sm text-emerald-950"></div>
 
             <!-- Report Navigation Pills -->
@@ -392,8 +392,8 @@
 
         let currentSession = 'FN';
         let sessionsData = {
-            'FN': { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [] },
-            'AN': { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [] }
+            'FN': { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [], uploadedFileSigs: [] },
+            'AN': { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [], uploadedFileSigs: [] }
         };
 
         let masterData = [];
@@ -401,6 +401,8 @@
         let customCapacities = [];
         let savedRoomDetails = {};
         let fileLogs = [];
+        let uploadedFileSigs = [];
+        let fileWarnings = [];
         let isBarcodeMode = false;
         let activeTab = 'rooms';
         let isProcessingFiles = false;
@@ -413,7 +415,6 @@
             updateBundleTabVisibility();
         });
 
-        // Unique paper key per uploaded file + subject so 3 uploaded files = 3 separate papers even if subject name is identical!
         function getPaperKey(s) {
             return `${s.fileId || 1}__${s.subject}__${s.type}`;
         }
@@ -464,17 +465,20 @@
                 hallAllocations: [...hallAllocations],
                 customCapacities: [...customCapacities],
                 savedRoomDetails: {...savedRoomDetails},
-                fileLogs: [...fileLogs]
+                fileLogs: [...fileLogs],
+                uploadedFileSigs: [...uploadedFileSigs]
             };
         }
 
         function loadSessionState(sessionName) {
-            const data = sessionsData[sessionName] || { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [] };
+            const data = sessionsData[sessionName] || { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [], uploadedFileSigs: [] };
             masterData = data.masterData || [];
             hallAllocations = data.hallAllocations || [];
             customCapacities = data.customCapacities || [];
             savedRoomDetails = data.savedRoomDetails || {};
             fileLogs = data.fileLogs || [];
+            uploadedFileSigs = data.uploadedFileSigs || [];
+            fileWarnings = [];
 
             updateBundleTabVisibility();
 
@@ -540,7 +544,7 @@
                     currentSession,
                     sessionsData
                 };
-                localStorage.setItem('examSeatingAppState_v9.1', JSON.stringify(state));
+                localStorage.setItem('examSeatingAppState_v9.2', JSON.stringify(state));
                 const badge = document.getElementById('autoSaveBadge');
                 if (badge) badge.classList.remove('hidden');
             } catch (e) {
@@ -550,7 +554,7 @@
 
         function loadFromStorage() {
             try {
-                const keys = ['examSeatingAppState_v9.1', 'examSeatingAppState_v9.0'];
+                const keys = ['examSeatingAppState_v9.2', 'examSeatingAppState_v9.1', 'examSeatingAppState_v9.0'];
                 let raw = null;
                 for (const k of keys) {
                     raw = localStorage.getItem(k);
@@ -640,11 +644,20 @@
             const totalPapersCount = allDistinctPapers.size;
             const roomBreakdownText = roomBreakdownParts.length > 0 ? ` (${roomBreakdownParts.join(' | ')})` : '';
 
+            let warningsHtml = "";
+            if (fileWarnings.length > 0) {
+                warningsHtml = `<div class="mt-2 mb-2 p-3 bg-red-50 border border-red-300 rounded-xl text-xs font-bold text-red-900 space-y-1">`;
+                fileWarnings.forEach(w => {
+                    warningsHtml += `<div class="flex items-center gap-1.5"><svg class="w-4 h-4 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg><span>${w}</span></div>`;
+                });
+                warningsHtml += `</div>`;
+            }
+
             statusBox.innerHTML = `
                 <div class="font-bold mb-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-emerald-200 pb-3 gap-2">
                     <span class="text-emerald-950 flex items-center gap-2">
                         <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        [${currentSession} Session] Nominal Rolls Processed (${totalPapersCount} Question ${totalPapersCount === 1 ? 'Paper' : 'Papers'} • ${namedCount} Names)
+                        [${currentSession} Session] Nominal Rolls Verified (${totalPapersCount} Question ${totalPapersCount === 1 ? 'Paper' : 'Papers'} • ${namedCount} Names)
                     </span>
                     <div class="flex flex-wrap items-center gap-2">
                         ${breakdownHTML}
@@ -656,6 +669,7 @@
                         </span>
                     </div>
                 </div>
+                ${warningsHtml}
                 <div class="space-y-1.5 mt-2 pl-1 max-h-52 overflow-y-auto text-xs">${fileLogs.join('')}</div>`;
             statusBox.classList.remove('hidden');
         }
@@ -703,7 +717,6 @@
             return `${rawDate} ${currentSession} ${totalCount} ${reportLabel}`;
         }
 
-        // Keeps every uploaded file as a separate Question Paper entry (even if subject name is identical!)
         function getSortedQuestionPapers() {
             const regQPs = [];
             const sdeQPs = [];
@@ -763,7 +776,9 @@
             customCapacities = [];
             savedRoomDetails = {};
             fileLogs = [];
-            sessionsData[currentSession] = { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [] };
+            uploadedFileSigs = [];
+            fileWarnings = [];
+            sessionsData[currentSession] = { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [], uploadedFileSigs: [] };
             saveToStorage();
             loadSessionState(currentSession);
         }
@@ -775,27 +790,33 @@
             
             isProcessingFiles = true;
             const pBtn = document.getElementById('processBtn');
-            if (pBtn) { pBtn.disabled = true; pBtn.textContent = "Reading..."; }
+            if (pBtn) { pBtn.disabled = true; pBtn.textContent = "Verifying..."; }
 
             try {
-                masterData = [];
-                fileLogs = [];
-                customCapacities = [];
-                savedRoomDetails = {};
-
+                fileWarnings = [];
                 document.getElementById('printableArea').innerHTML = `
                     <div class="flex flex-col items-center justify-center h-full text-indigo-600 py-20 no-print font-sans">
                         <svg class="animate-spin w-10 h-10 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <p class="text-base font-extrabold">Scanning ${files.length} Nominal Roll File(s) for ${currentSession} Session...</p>
+                        <p class="text-base font-extrabold">Verifying and Scanning ${files.length} Nominal Roll File(s)...</p>
                     </div>`;
 
-                // Process EVERY uploaded file with its own unique fileId (1, 2, 3...)
+                const currentSetExamDate = document.getElementById('examDate').value.trim();
+
                 for (let fIdx = 0; fIdx < files.length; fIdx++) {
                     const file = files[fIdx];
+                    const fileSig = `${file.name}_${file.size}`;
+
+                    // Check for duplicate upload in current session
+                    if (uploadedFileSigs.includes(fileSig)) {
+                        fileWarnings.push(`<b>Duplicate File:</b> "${file.name}" was already uploaded in this session!`);
+                        continue;
+                    }
+                    uploadedFileSigs.push(fileSig);
+
                     const fname = file.name.toLowerCase();
                     try {
                         if (fname.endsWith('.pdf')) {
-                            await processPDF(file, fIdx + 1);
+                            await processPDF(file, fIdx + 1, currentSetExamDate);
                         } else if (fname.endsWith('.csv')) {
                             await processCSV(file, fIdx + 1);
                         }
@@ -805,11 +826,10 @@
                     }
                 }
 
-                // Deduplicate only within the SAME fileId + Subject + RegNo
                 const uniqueMaster = [];
                 const seenEntries = new Set();
                 masterData.forEach(item => {
-                    const entryKey = `${item.fileId}||${item.subject}||${item.regNo}`;
+                    const entryKey = `${item.fileId}||${item.subject}||${item.type}||${item.regNo}`;
                     if (!seenEntries.has(entryKey)) {
                         seenEntries.add(entryKey);
                         uniqueMaster.push(item);
@@ -817,7 +837,7 @@
                 });
                 masterData = uniqueMaster;
 
-                if (masterData.length === 0) {
+                if (masterData.length === 0 && fileWarnings.length === 0) {
                     renderStatusBox();
                     document.getElementById('printableArea').innerHTML = `
                         <div class="flex flex-col items-center justify-center h-full text-red-500 py-20 no-print font-sans">
@@ -833,7 +853,7 @@
                 document.getElementById('tabsContainer').style.display = 'flex';
                 document.getElementById('printContainer').style.display = 'flex';
                 document.getElementById('studentFinderBox').classList.remove('hidden');
-                showTab('rooms');
+                showTab(activeTab);
             } finally {
                 isProcessingFiles = false;
                 if (pBtn) { pBtn.disabled = false; pBtn.textContent = "Process"; }
@@ -897,7 +917,7 @@
             return { subject: subj.toUpperCase(), scheme, type: bType, slot };
         }
 
-        async function processPDF(file, fileIndex) {
+        async function processPDF(file, fileIndex, currentSetExamDate) {
             const arrayBuffer = await file.arrayBuffer();
             let pdf;
             try {
@@ -924,6 +944,7 @@
             let activeBroadType = fileBroadType;
             let activeSlot = "";
             let subPaperCounter = 0;
+            let fileDetectedDate = "";
 
             let fileSubjectsCount = {};
 
@@ -981,7 +1002,7 @@
 
                 const dateMatch = cleanPageText.match(/(?:Exam Date|Date of Examination)\s*:?\s*\|?\s*(\d{2}[\.\-]\d{2}[\.\-]\d{4})\s*(\d{2}:\d{2}\s*[AP]M)?/i);
                 if (dateMatch) {
-                    document.getElementById('examDate').value = dateMatch[1].replace(/\./g, '-');
+                    fileDetectedDate = dateMatch[1].replace(/\./g, '-');
                 }
 
                 if (/4\/202\d/i.test(cleanPageText) || /April/i.test(cleanPageText)) document.getElementById('examMonth').value = "April";
@@ -1012,7 +1033,6 @@
                             }
                             const cleanedName = cleanExtractedName(nameParts.join(" "));
 
-                            // Unique fileId per uploaded file (plus subPaperCounter if multiple papers exist in 1 PDF)
                             const uniqueFileId = fileIndex * 100 + subPaperCounter;
 
                             masterData.push({
@@ -1031,6 +1051,16 @@
                         }
                     }
                 });
+            }
+
+            // Check Date Mismatch against selected Exam Date
+            if (fileDetectedDate && currentSetExamDate) {
+                // Normalize both dates to DD-MM-YYYY format for comparison
+                const normFileDate = fileDetectedDate.replace(/\//g, '-');
+                const normSetDate = currentSetExamDate.replace(/\//g, '-');
+                if (normFileDate !== normSetDate) {
+                    fileWarnings.push(`<b>Date Mismatch Alert:</b> File "${file.name}" has exam date <b>${normFileDate}</b>, but selected Exam Date is <b>${normSetDate}</b>!`);
+                }
             }
 
             const entries = Object.entries(fileSubjectsCount);
@@ -1141,7 +1171,6 @@
                     byPaper[pKey].students.push(student);
                 });
 
-                // Sort papers A-Z by subject name, and by fileId if subject names are identical
                 const sortedPaperKeys = Object.keys(byPaper).sort((kA, kB) => {
                     const pA = byPaper[kA];
                     const pB = byPaper[kB];
@@ -1490,7 +1519,7 @@
                             <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
                             <div>
                                 <h2 class="text-lg font-extrabold text-slate-800">[${currentSession} Session] Room & Invigilator Allocation (${hallAllocations.length} Halls)</h2>
-                                <p class="text-xs text-slate-400">Each uploaded Nominal Roll is kept as a separate Paper • Exact student order preserved</p>
+                                <p class="text-xs text-slate-400">Each uploaded file is kept as a separate Paper • Exact student order preserved</p>
                             </div>
                         </div>
                     </div>`;
