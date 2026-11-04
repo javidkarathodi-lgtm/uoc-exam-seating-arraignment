@@ -164,7 +164,7 @@
                 <div>
                     <div class="flex items-center gap-2.5">
                         <span class="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">UniExam SeatPro</span>
-                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">v8.4 Synced QP & Roll Order</span>
+                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">v8.5 Anti-Duplicate & Room Count</span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
                         <span>Smart University Examination Suite</span>
@@ -290,7 +290,7 @@
                     <div class="space-y-2">
                         <div>
                             <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Default Seats per Room</label>
-                            <input type="number" id="hallStrength" value="30" onchange="if(masterData.length) { customCapacities = []; allocateSeats(); showTab(activeTab); }" class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2.5 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none font-extrabold text-center text-xl text-slate-800">
+                            <input type="number" id="hallStrength" value="30" onchange="if(masterData.length) { customCapacities = []; allocateSeats(); renderStatusBox(); showTab(activeTab); }" class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2.5 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none font-extrabold text-center text-xl text-slate-800">
                         </div>
                         <p class="text-[11px] text-slate-400 leading-tight pt-1">Individual room capacity can be customized inside Tab 1.</p>
                     </div>
@@ -309,7 +309,7 @@
                         </label>
                     </div>
                     <div class="mt-2.5 flex gap-2">
-                        <button onclick="processFiles()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-1.5 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm">Process</button>
+                        <button id="processBtn" onclick="processFiles()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-1.5 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm">Process</button>
                         <button onclick="clearFiles()" class="px-3.5 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 rounded-xl text-xs font-bold transition-colors">Clear</button>
                     </div>
                 </div>
@@ -327,7 +327,7 @@
                 </div>
             </div>
 
-            <!-- File Status -->
+            <!-- File Status (Now displays Total Students + Total Rooms Required) -->
             <div id="fileStatusBox" class="hidden mb-6 p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-sm text-emerald-950"></div>
 
             <!-- Report Navigation Pills -->
@@ -403,6 +403,7 @@
         let fileLogs = [];
         let isBarcodeMode = false;
         let activeTab = 'rooms';
+        let isProcessingFiles = false; // Lock to prevent double-processing race condition
 
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
@@ -534,7 +535,7 @@
                     currentSession,
                     sessionsData
                 };
-                localStorage.setItem('examSeatingAppState_v8.4', JSON.stringify(state));
+                localStorage.setItem('examSeatingAppState_v8.5', JSON.stringify(state));
                 const badge = document.getElementById('autoSaveBadge');
                 if (badge) badge.classList.remove('hidden');
             } catch (e) {
@@ -544,7 +545,7 @@
 
         function loadFromStorage() {
             try {
-                const keys = ['examSeatingAppState_v8.4', 'examSeatingAppState_v8.3', 'examSeatingAppState_v8.2', 'examSeatingAppState_v8.1', 'examSeatingAppState_v8.0', 'examSeatingAppState_v7.9', 'examSeatingAppState_v7.8', 'examSeatingAppState_v7.7'];
+                const keys = ['examSeatingAppState_v8.5', 'examSeatingAppState_v8.4', 'examSeatingAppState_v8.3', 'examSeatingAppState_v8.2', 'examSeatingAppState_v8.1', 'examSeatingAppState_v8.0', 'examSeatingAppState_v7.9', 'examSeatingAppState_v7.8', 'examSeatingAppState_v7.7'];
                 let raw = null;
                 for (const k of keys) {
                     raw = localStorage.getItem(k);
@@ -591,6 +592,8 @@
             if(schemeTotals['PG'] > 0) breakdownHTML += `<span class="bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-1 rounded-lg text-xs font-bold">PG: ${schemeTotals['PG']}</span>`;
             if(schemeTotals['SDE'] > 0) breakdownHTML += `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg text-xs font-bold">SDE: ${schemeTotals['SDE']}</span>`;
 
+            const totalRoomsReq = hallAllocations.length;
+
             statusBox.innerHTML = `
                 <div class="font-bold mb-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-emerald-200 pb-3 gap-2">
                     <span class="text-emerald-950 flex items-center gap-2">
@@ -600,6 +603,10 @@
                     <div class="flex flex-wrap items-center gap-2">
                         ${breakdownHTML}
                         <span class="bg-emerald-700 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm">Total: ${masterData.length}</span>
+                        <span class="bg-indigo-900 text-white px-3 py-1 rounded-lg text-xs font-extrabold shadow-sm flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            Rooms Required: ${totalRoomsReq}
+                        </span>
                     </div>
                 </div>
                 <div class="space-y-1.5 mt-2 pl-1 max-h-52 overflow-y-auto text-xs">${fileLogs.join('')}</div>`;
@@ -701,51 +708,81 @@
         }
 
         async function processFiles() {
+            // Prevent overlapping runs if user clicks Process while onchange is already running
+            if (isProcessingFiles) return;
             const files = document.getElementById('fileInput').files;
             if (files.length === 0) return alert("Please select at least one PDF or CSV file.");
             
-            masterData = [];
-            fileLogs = [];
-            customCapacities = [];
-            savedRoomDetails = {};
+            isProcessingFiles = true;
+            const pBtn = document.getElementById('processBtn');
+            if (pBtn) { pBtn.disabled = true; pBtn.textContent = "Reading..."; }
 
-            document.getElementById('printableArea').innerHTML = `
-                <div class="flex flex-col items-center justify-center h-full text-indigo-600 py-20 no-print font-sans">
-                    <svg class="animate-spin w-10 h-10 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <p class="text-base font-extrabold">Scanning Nominal Rolls for ${currentSession} Session...</p>
-                </div>`;
+            try {
+                masterData = [];
+                fileLogs = [];
+                customCapacities = [];
+                savedRoomDetails = {};
 
-            for (let file of files) {
-                const fname = file.name.toLowerCase();
-                try {
-                    if (fname.endsWith('.pdf')) {
-                        await processPDF(file);
-                    } else if (fname.endsWith('.csv')) {
-                        await processCSV(file);
-                    }
-                } catch (err) {
-                    console.error("Error reading file:", file.name, err);
-                    fileLogs.push(`<div class="flex items-center gap-2 text-red-600"><b>${file.name}:</b> Error reading file</div>`);
-                }
-            }
-            
-            renderStatusBox();
-
-            if (masterData.length === 0) {
                 document.getElementById('printableArea').innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full text-red-500 py-20 no-print font-sans">
-                        <p class="text-lg font-bold">No Valid Register Numbers Found</p>
+                    <div class="flex flex-col items-center justify-center h-full text-indigo-600 py-20 no-print font-sans">
+                        <svg class="animate-spin w-10 h-10 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <p class="text-base font-extrabold">Scanning Nominal Rolls for ${currentSession} Session...</p>
                     </div>`;
-                return;
-            }
 
-            allocateSeats();
-            updateBundleTabVisibility();
-            saveToStorage();
-            document.getElementById('tabsContainer').style.display = 'flex';
-            document.getElementById('printContainer').style.display = 'flex';
-            document.getElementById('studentFinderBox').classList.remove('hidden');
-            showTab('rooms');
+                // Deduplicate selected files by name + size in case duplicate files were selected
+                const seenFiles = new Set();
+                for (let file of files) {
+                    const fileKey = `${file.name}_${file.size}`;
+                    if (seenFiles.has(fileKey)) continue;
+                    seenFiles.add(fileKey);
+
+                    const fname = file.name.toLowerCase();
+                    try {
+                        if (fname.endsWith('.pdf')) {
+                            await processPDF(file);
+                        } else if (fname.endsWith('.csv')) {
+                            await processCSV(file);
+                        }
+                    } catch (err) {
+                        console.error("Error reading file:", file.name, err);
+                        fileLogs.push(`<div class="flex items-center gap-2 text-red-600"><b>${file.name}:</b> Error reading file</div>`);
+                    }
+                }
+
+                // Final strict deduplication on masterData (by Subject + RegNo) to guarantee exact count
+                const uniqueMaster = [];
+                const seenEntries = new Set();
+                masterData.forEach(item => {
+                    const entryKey = `${item.subject}||${item.regNo}`;
+                    if (!seenEntries.has(entryKey)) {
+                        seenEntries.add(entryKey);
+                        uniqueMaster.push(item);
+                    }
+                });
+                masterData = uniqueMaster;
+
+                if (masterData.length === 0) {
+                    renderStatusBox();
+                    document.getElementById('printableArea').innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full text-red-500 py-20 no-print font-sans">
+                            <p class="text-lg font-bold">No Valid Register Numbers Found</p>
+                        </div>`;
+                    return;
+                }
+
+                // Allocate seats BEFORE rendering status box so hallAllocations.length (Rooms Required) is accurate!
+                allocateSeats();
+                renderStatusBox();
+                updateBundleTabVisibility();
+                saveToStorage();
+                document.getElementById('tabsContainer').style.display = 'flex';
+                document.getElementById('printContainer').style.display = 'flex';
+                document.getElementById('studentFinderBox').classList.remove('hidden');
+                showTab('rooms');
+            } finally {
+                isProcessingFiles = false;
+                if (pBtn) { pBtn.disabled = false; pBtn.textContent = "Process"; }
+            }
         }
 
         function cleanExtractedName(raw) {
@@ -912,14 +949,16 @@
             else if (/CBCSS/i.test(rawName)) schemeType = "CBCSS";
 
             let count = 0;
+            const seenInCsv = new Set();
             
             lines.forEach((line, i) => {
                 if (i === 0 || !line.trim()) return; 
                 const cols = line.split(',');
-                const reg = cols[0] ? cols[0].trim() : "";
+                const reg = cols[0] ? cols[0].trim().toUpperCase() : "";
                 const studentName = cols[1] ? cols[1].replace(/["']/g, '').trim().toUpperCase() : "";
-                if (reg && /^[A-Z]{4}/i.test(reg)) {
-                    masterData.push({ regNo: reg.toUpperCase(), name: studentName, subject: subjectName, slot: "", type: broadType, scheme: schemeType });
+                if (reg && /^[A-Z]{4}/i.test(reg) && !seenInCsv.has(reg)) {
+                    seenInCsv.add(reg);
+                    masterData.push({ regNo: reg, name: studentName, subject: subjectName, slot: "", type: broadType, scheme: schemeType });
                     count++;
                 }
             });
@@ -967,7 +1006,6 @@
                     if (!bySubject[student.subject].regs.includes(student.regNo)) bySubject[student.subject].regs.push(student.regNo);
                 });
 
-                // Sort SUBJECTS alphabetically (A-Z) so Hall 1, Hall 2... match the exact QUESTION PAPERS TO BE PRINTED order!
                 const sortedSubjectKeys = Object.keys(bySubject).sort((a, b) => 
                     a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
                 );
@@ -977,7 +1015,6 @@
 
                 for (const subject of sortedSubjectKeys) {
                     const info = bySubject[subject];
-                    // Keep students inside each subject in exact Nominal Roll order (Regular first, Supplementary after)
                     for (const reg of info.regs) {
                         const maxCap = getCap(globalHallNo - 1);
                         if (currentSeat >= maxCap) {
@@ -1022,6 +1059,7 @@
             if (!val || val < 4) return;
             customCapacities[hallIdx] = val;
             allocateSeats();
+            renderStatusBox();
             saveToStorage();
             showTab('rooms');
         }
@@ -1312,7 +1350,7 @@
                         <div class="flex items-center gap-2.5">
                             <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
                             <div>
-                                <h2 class="text-lg font-extrabold text-slate-800">[${currentSession} Session] Room & Invigilator Allocation</h2>
+                                <h2 class="text-lg font-extrabold text-slate-800">[${currentSession} Session] Room & Invigilator Allocation (${hallAllocations.length} Halls)</h2>
                                 <p class="text-xs text-slate-400">Subjects ordered A-Z matching QP list • Students kept in exact Nominal Roll order</p>
                             </div>
                         </div>
