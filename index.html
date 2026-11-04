@@ -164,7 +164,7 @@
                 <div>
                     <div class="flex items-center gap-2.5">
                         <span class="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">UniExam SeatPro</span>
-                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">v8.9 Multi-Paper Splitter</span>
+                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">v9.0 Exact Nominal Roll Reader</span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
                         <span>Smart University Examination Suite</span>
@@ -188,7 +188,7 @@
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-100">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Examination Seating & Nominal Roll Suite</h1>
-                    <p class="text-slate-500 text-sm font-medium mt-1">Automatically separates different course codes/subjects inside the same file (e.g. AFU vs BCM)</p>
+                    <p class="text-slate-500 text-sm font-medium mt-1">Every uploaded Nominal Roll / Paper is kept strictly separate across Chief Summary, Invigilator Details & Slips</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
@@ -413,35 +413,6 @@
             updateBundleTabVisibility();
         });
 
-        // Extracts the 3-letter programme/course code from Calicut University Register Numbers (e.g., VUAWAFU001 -> AFU, VUAWBCM012 -> BCM)
-        function getRegProgCode(reg) {
-            if (!reg || reg.length < 7) return "";
-            const m = reg.match(/^[A-Z]{4}([A-Z]{2,3})\d+/i);
-            return m ? m[1].toUpperCase() : reg.substring(4, 7).toUpperCase();
-        }
-
-        // Ensures that if two different courses (e.g. AFU vs BCM) share a generic paper title without a specific paper code, they are kept as separate Question Papers!
-        function ensureDistinctSubjectByCourse(rawSubj, regNo) {
-            const prog = getRegProgCode(regNo);
-            if (!prog) return rawSubj;
-            // If the extracted subject already explicitly contains a course/paper code like AFU6B18 or BCM6B16 or [COMMERCE], keep it as is
-            const hasExplicitCode = /\b[A-Z]{3}\d[A-Z]{1,2}\d{2,3}/i.test(rawSubj) || /--\([A-Z]{3}/i.test(rawSubj);
-            if (hasExplicitCode) {
-                // Even if it has a code, if this student's regNo belongs to a DIFFERENT programme (e.g. page 2 switched from AFU to BCM without repeating the header), tag it!
-                const codeMatch = rawSubj.match(/\b([A-Z]{3})\d[A-Z]{1,2}\d{2,3}/i);
-                if (codeMatch && codeMatch[1].toUpperCase() !== prog) {
-                    // Replace old prog code or append new prog code so they never merge into 1 paper
-                    return `${rawSubj} [${prog}]`;
-                }
-                return rawSubj;
-            }
-            // If no explicit code is present in the subject title, append the programme code [AFU] / [BCM] so they become separate papers!
-            if (!rawSubj.includes(`[${prog}]`)) {
-                return `${rawSubj} [${prog}]`;
-            }
-            return rawSubj;
-        }
-
         function isFyugp135Eligible() {
             const sem = document.getElementById('examName').value;
             const isOddSem = (sem === 'First Sem' || sem === 'Third Sem' || sem === 'Fifth Sem');
@@ -564,7 +535,7 @@
                     currentSession,
                     sessionsData
                 };
-                localStorage.setItem('examSeatingAppState_v8.9', JSON.stringify(state));
+                localStorage.setItem('examSeatingAppState_v9.0', JSON.stringify(state));
                 const badge = document.getElementById('autoSaveBadge');
                 if (badge) badge.classList.remove('hidden');
             } catch (e) {
@@ -574,7 +545,7 @@
 
         function loadFromStorage() {
             try {
-                const keys = ['examSeatingAppState_v8.9', 'examSeatingAppState_v8.8', 'examSeatingAppState_v8.7', 'examSeatingAppState_v8.6', 'examSeatingAppState_v8.5', 'examSeatingAppState_v8.4'];
+                const keys = ['examSeatingAppState_v9.0', 'examSeatingAppState_v8.9', 'examSeatingAppState_v8.8'];
                 let raw = null;
                 for (const k of keys) {
                     raw = localStorage.getItem(k);
@@ -799,7 +770,8 @@
                     </div>`;
 
                 const seenFiles = new Set();
-                for (let file of files) {
+                for (let fIdx = 0; fIdx < files.length; fIdx++) {
+                    const file = files[fIdx];
                     const fileKey = `${file.name}_${file.size}`;
                     if (seenFiles.has(fileKey)) continue;
                     seenFiles.add(fileKey);
@@ -807,9 +779,9 @@
                     const fname = file.name.toLowerCase();
                     try {
                         if (fname.endsWith('.pdf')) {
-                            await processPDF(file);
+                            await processPDF(file, fIdx + 1);
                         } else if (fname.endsWith('.csv')) {
-                            await processCSV(file);
+                            await processCSV(file, fIdx + 1);
                         }
                     } catch (err) {
                         console.error("Error reading file:", file.name, err);
@@ -863,46 +835,54 @@
             return s.toUpperCase();
         }
 
-        function extractContextFromBlock(blockText, fallbackSubject, fallbackScheme, fallbackType, fallbackSlot) {
+        // Cleanly extracts Paper Details / Subject from a page's full text or filename
+        function parsePageMetadata(cleanPageText, fallbackSubject, fallbackScheme, fallbackType, fallbackSlot, fileName) {
             let subj = fallbackSubject;
             let scheme = fallbackScheme;
             let bType = fallbackType;
             let slot = fallbackSlot;
 
-            if (/SDE/i.test(blockText)) {
+            if (/\bSDE\b/i.test(cleanPageText) || /DISTANCE/i.test(cleanPageText)) {
                 scheme = "SDE";
                 bType = "SDE";
-            } else if (/FYUG/i.test(blockText)) {
+            } else if (/FYUG/i.test(cleanPageText)) {
                 scheme = "FYUG";
                 bType = "REG";
-            } else if (/CBCSS-PG/i.test(blockText) || /\bPG\b/i.test(blockText)) {
+            } else if (/CBCSS-PG/i.test(cleanPageText) || /\bPG\b/i.test(cleanPageText)) {
                 scheme = "PG";
                 bType = "REG";
-            } else if (/CBCSS/i.test(blockText) || /AFZAL/i.test(blockText)) {
+            } else if (/CBCSS/i.test(cleanPageText) || /AFZAL/i.test(cleanPageText) || /CUCBCSS/i.test(cleanPageText)) {
                 if (scheme !== "SDE") {
                     scheme = "CBCSS";
                     bType = "REG";
                 }
             }
 
-            const slotMatch = blockText.match(/Slot\s*:?\s*\|?\s*(.*?)(?=Date of Examination|Exam Date|$)/i);
+            const slotMatch = cleanPageText.match(/Slot\s*:?\s*\|?\s*(.*?)(?=Date of Examination|Exam Date|Paper|SI\.No|Sl\.No|#|$)/i);
             if (slotMatch && slotMatch[1] && slotMatch[1].trim()) {
-                slot = slotMatch[1].trim();
+                slot = slotMatch[1].trim().replace(/\s*\|\s*/g, ' ');
             }
 
-            const paperMatch = blockText.match(/Paper Details\s*:?\s*(.*?)(?=Exam Date|Date of Examination|SI\.No|Sl\.No|#|$)/i);
-            const courseMatch = blockText.match(/Course\s*:?\s*\|?\s*([^\[]+\[[^\]]+\])/i);
+            // Try multiple Calicut University header patterns for Paper / Subject
+            const paperDetailsMatch = cleanPageText.match(/Paper\s*Details\s*:?\s*\|?\s*(.*?)(?=Exam\s*Date|Date\s*of\s*Exam|SI\.No|Sl\.No|#|Register\s*Number|Reg\.?\s*No)/i);
+            const paperColonMatch = cleanPageText.match(/\bPaper\s*:\s*\|?\s*(.*?)(?=Slot|Exam\s*Date|Date\s*of\s*Exam|SI\.No|Sl\.No|#|Register\s*Number)/i);
+            const courseBracketMatch = cleanPageText.match(/Course\s*:?\s*\|?\s*([^\n\|]+?\[[^\]]+\])/i);
+            const coursePlainMatch = cleanPageText.match(/Course\s*:?\s*\|?\s*(.*?)(?=Paper|Slot|Exam\s*Date|Date\s*of\s*Exam|SI\.No|Sl\.No|#)/i);
 
-            if (paperMatch && paperMatch[1].trim()) {
-                subj = "PAPER DETAILS: " + paperMatch[1].trim().replace(/\s*\|\s*/g, ' ');
-            } else if (courseMatch && courseMatch[1].trim()) {
-                subj = "PAPER DETAILS: " + courseMatch[1].trim() + (slot ? ` --(${slot})` : "");
+            if (paperDetailsMatch && paperDetailsMatch[1].trim().length > 2) {
+                subj = "PAPER DETAILS: " + paperDetailsMatch[1].trim().replace(/\s*\|\s*/g, ' ');
+            } else if (paperColonMatch && paperColonMatch[1].trim().length > 2) {
+                subj = "PAPER DETAILS: " + paperColonMatch[1].trim().replace(/\s*\|\s*/g, ' ');
+            } else if (courseBracketMatch && courseBracketMatch[1].trim().length > 2) {
+                subj = "PAPER DETAILS: " + courseBracketMatch[1].trim().replace(/\s*\|\s*/g, ' ') + (slot ? ` --(${slot})` : "");
+            } else if (coursePlainMatch && coursePlainMatch[1].trim().length > 2 && slot) {
+                subj = "PAPER DETAILS: " + coursePlainMatch[1].trim().replace(/\s*\|\s*/g, ' ') + ` --(${slot})`;
             }
 
             return { subject: subj.toUpperCase(), scheme, type: bType, slot };
         }
 
-        async function processPDF(file) {
+        async function processPDF(file, fileIndex) {
             const arrayBuffer = await file.arrayBuffer();
             let pdf;
             try {
@@ -913,16 +893,23 @@
 
             const singleRegTest = /^[A-Z]{4}[A-Z0-9]{2,5}\d{2,4}$/;
 
-            let currentScheme = document.getElementById('scheme').value;
-            let currentBroadType = "REG";
-            if (/SDE/i.test(file.name)) { currentScheme = "SDE"; currentBroadType = "SDE"; }
-            else if (/FYUG/i.test(file.name)) { currentScheme = "FYUG"; }
-            else if (/PG/i.test(file.name)) { currentScheme = "PG"; }
-            else if (/CBCSS/i.test(file.name)) { currentScheme = "CBCSS"; }
+            // Default scheme from filename or dropdown
+            let fileScheme = document.getElementById('scheme').value;
+            let fileBroadType = "REG";
+            if (/SDE/i.test(file.name)) { fileScheme = "SDE"; fileBroadType = "SDE"; }
+            else if (/FYUG/i.test(file.name)) { fileScheme = "FYUG"; }
+            else if (/PG/i.test(file.name)) { fileScheme = "PG"; }
+            else if (/CBCSS/i.test(file.name)) { fileScheme = "CBCSS"; }
 
-            const fnMatch = file.name.match(/202\d_(.*)\.pdf/i);
-            let currentSubject = ("PAPER DETAILS: " + (fnMatch ? fnMatch[1].trim() : file.name.replace(/\.pdf$/i, ''))).toUpperCase();
-            let currentSlot = "";
+            // Clean fallback subject from filename (guarantees every uploaded file has a unique default subject!)
+            let cleanFileName = file.name.replace(/\.pdf$/i, '').replace(/^NR_/i, '').trim();
+            const fnAfterYear = cleanFileName.match(/202\d[_\-\s]+(.*)/i);
+            let fileFallbackSubject = "PAPER DETAILS: " + (fnAfterYear && fnAfterYear[1].trim() ? fnAfterYear[1].trim() : cleanFileName).toUpperCase();
+
+            let activeSubject = fileFallbackSubject;
+            let activeScheme = fileScheme;
+            let activeBroadType = fileBroadType;
+            let activeSlot = "";
 
             let fileSubjectsCount = {};
 
@@ -946,21 +933,59 @@
 
                 rows.sort((a, b) => b.y - a.y);
 
-                let pageHeaderBuffer = "";
-                let pageFullText = "";
-
+                // First build the full text of this page to accurately extract multi-line headers (Paper Details / Course / Slot)
+                let pageLines = [];
                 rows.forEach(r => {
                     r.items.sort((a, b) => a.x - b.x);
-                    const rowLine = r.items.map(it => it.str).join(" ");
-                    pageFullText += rowLine + " ";
+                    pageLines.push(r.items.map(it => it.str).join(" "));
+                });
+                const cleanPageText = pageLines.join(" ").replace(/\s+/g, " ");
 
-                    if (/(?:Paper Details|Course\s*:|Slot\s*:|SDE|FYUG|CBCSS|AFZAL)/i.test(rowLine)) {
-                        pageHeaderBuffer += " " + rowLine;
-                        const updated = extractContextFromBlock(pageHeaderBuffer, currentSubject, currentScheme, currentBroadType, currentSlot);
-                        currentSubject = updated.subject;
-                        currentScheme = updated.scheme;
-                        currentBroadType = updated.type;
-                        currentSlot = updated.slot;
+                // Check if this page has a header block (e.g. Page 1, or a new Nominal Roll section on Page X)
+                if (/(?:Paper\s*Details|Course\s*:|Nominal\s*Roll|University\s*of\s*Calicut)/i.test(cleanPageText)) {
+                    const meta = parsePageMetadata(cleanPageText, activeSubject, activeScheme, activeBroadType, activeSlot, file.name);
+                    activeSubject = meta.subject;
+                    activeScheme = meta.scheme;
+                    activeBroadType = meta.type;
+                    activeSlot = meta.slot;
+                }
+
+                // Auto-detect global College, Semester, Date, Month from page text
+                const colMatch = cleanPageText.match(/College\s*:\s*([^,\n]+(?:,[^,\n]+)?)(?=\s+Course|\s+Paper|\s+Slot|\s+Date)/i);
+                if (colMatch && colMatch[1] && !document.getElementById('collegeName').value.trim()) {
+                    document.getElementById('collegeName').value = colMatch[1].trim();
+                }
+
+                if (/First\s+Semester/i.test(cleanPageText) || /First\s+Semester/i.test(file.name)) document.getElementById('examName').value = "First Sem";
+                else if (/Second\s+Semester/i.test(cleanPageText) || /Second\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Second Sem";
+                else if (/Third\s+Semester/i.test(cleanPageText) || /Third\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Third Sem";
+                else if (/Fourth\s+Semester/i.test(cleanPageText) || /Fourth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Fourth Sem";
+                else if (/Fifth\s+Semester/i.test(cleanPageText) || /Fifth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Fifth Sem";
+                else if (/Sixth\s+Semester/i.test(cleanPageText) || /Sixth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Sixth Sem";
+
+                if (activeScheme === "FYUG") {
+                    document.getElementById('scheme').value = "FYUG";
+                }
+
+                const dateMatch = cleanPageText.match(/(?:Exam Date|Date of Examination)\s*:?\s*\|?\s*(\d{2}[\.\-]\d{2}[\.\-]\d{4})\s*(\d{2}:\d{2}\s*[AP]M)?/i);
+                if (dateMatch) {
+                    document.getElementById('examDate').value = dateMatch[1].replace(/\./g, '-');
+                }
+
+                if (/4\/202\d/i.test(cleanPageText) || /April/i.test(cleanPageText)) document.getElementById('examMonth').value = "April";
+                else if (/11\/202\d/i.test(cleanPageText) || /November/i.test(cleanPageText)) document.getElementById('examMonth').value = "November";
+
+                // Now extract students row-by-row on this page (also checking if a mid-page header appears)
+                let midPageBuffer = "";
+                rows.forEach(r => {
+                    const rowLine = r.items.map(it => it.str).join(" ");
+                    if (/(?:Paper\s*Details|Course\s*:|Slot\s*:)/i.test(rowLine)) {
+                        midPageBuffer += " " + rowLine;
+                        const updated = parsePageMetadata(midPageBuffer.replace(/\s+/g, " "), activeSubject, activeScheme, activeBroadType, activeSlot, file.name);
+                        activeSubject = updated.subject;
+                        activeScheme = updated.scheme;
+                        activeBroadType = updated.type;
+                        activeSlot = updated.slot;
                     }
 
                     for (let k = 0; k < r.items.length; k++) {
@@ -975,56 +1000,26 @@
                             }
                             const cleanedName = cleanExtractedName(nameParts.join(" "));
 
-                            // Distinguish subject by course code (e.g., AFU vs BCM) if two courses share a generic subject or file
-                            const finalSubjectForStudent = ensureDistinctSubjectByCourse(currentSubject, token);
-
                             masterData.push({
                                 regNo: token,
                                 name: cleanedName,
-                                subject: finalSubjectForStudent,
-                                slot: currentSlot,
-                                type: currentBroadType,
-                                scheme: currentScheme
+                                subject: activeSubject,
+                                slot: activeSlot,
+                                type: activeBroadType,
+                                scheme: activeScheme
                             });
 
-                            const logKey = `${currentScheme} • ${finalSubjectForStudent}`;
+                            const logKey = `${activeScheme} • ${activeSubject}`;
                             fileSubjectsCount[logKey] = (fileSubjectsCount[logKey] || 0) + 1;
-                            pageHeaderBuffer = "";
+                            midPageBuffer = "";
                         }
                     }
                 });
-
-                const cleanPage = pageFullText.replace(/\s+/g, " ");
-                const colMatch = cleanPage.match(/College\s*:\s*([^,\n]+(?:,[^,\n]+)?)(?=\s+Course|\s+Paper|\s+Slot|\s+Date)/i);
-                if (colMatch && colMatch[1] && !document.getElementById('collegeName').value.trim()) {
-                    document.getElementById('collegeName').value = colMatch[1].trim();
-                }
-
-                if (/First\s+Semester/i.test(cleanPage) || /First\s+Semester/i.test(file.name)) document.getElementById('examName').value = "First Sem";
-                else if (/Second\s+Semester/i.test(cleanPage) || /Second\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Second Sem";
-                else if (/Third\s+Semester/i.test(cleanPage) || /Third\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Third Sem";
-                else if (/Fourth\s+Semester/i.test(cleanPage) || /Fourth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Fourth Sem";
-                else if (/Fifth\s+Semester/i.test(cleanPage) || /Fifth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Fifth Sem";
-                else if (/Sixth\s+Semester/i.test(cleanPage) || /Sixth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Sixth Sem";
-
-                if (currentScheme === "FYUG") {
-                    document.getElementById('scheme').value = "FYUG";
-                }
-
-                const dateMatch = cleanPage.match(/(?:Exam Date|Date of Examination)\s*:?\s*\|?\s*(\d{2}[\.\-]\d{2}[\.\-]\d{4})\s*(\d{2}:\d{2}\s*[AP]M)?/i);
-                if (dateMatch) {
-                    document.getElementById('examDate').value = dateMatch[1].replace(/\./g, '-');
-                }
-
-                if (/4\/202\d/i.test(cleanPage) || /April/i.test(cleanPage)) document.getElementById('examMonth').value = "April";
-                else if (/11\/202\d/i.test(cleanPage) || /November/i.test(cleanPage)) document.getElementById('examMonth').value = "November";
             }
 
             const entries = Object.entries(fileSubjectsCount);
-            if (entries.length <= 1) {
-                const totalInFile = entries.length === 1 ? entries[0][1] : 0;
-                const subjLabel = entries.length === 1 ? entries[0][0].split(' • ')[1].replace(/^PAPER DETAILS:\s*/i, '') : file.name;
-                fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700">${file.name} <span class="text-slate-400">(${subjLabel})</span></span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${currentScheme} • ${totalInFile} Students</span></div>`);
+            if (entries.length === 0) {
+                fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-red-200"><span class="font-semibold text-red-700">${file.name}</span><span class="text-xs font-bold bg-red-100 text-red-800 px-2 py-0.5 rounded">0 Students</span></div>`);
             } else {
                 entries.forEach(([key, cnt]) => {
                     const [sch, subjTitle] = key.split(' • ');
@@ -1033,12 +1028,12 @@
             }
         }
 
-        async function processCSV(file) {
+        async function processCSV(file, fileIndex) {
             const text = await file.text();
             const lines = text.split('\n');
-            let rawName = file.name.replace(/\.csv$/i, '');
-            const fnMatch = rawName.match(/202\d_(.*)/i);
-            let defaultSubject = "PAPER DETAILS: " + (fnMatch ? fnMatch[1].trim() : rawName).toUpperCase();
+            let rawName = file.name.replace(/\.csv$/i, '').replace(/^NR_/i, '').trim();
+            const fnMatch = rawName.match(/202\d[_\-\s]+(.*)/i);
+            let defaultSubject = "PAPER DETAILS: " + (fnMatch && fnMatch[1].trim() ? fnMatch[1].trim() : rawName).toUpperCase();
             
             let defaultScheme = document.getElementById('scheme').value;
             let defaultBroadType = "REG";
@@ -1067,7 +1062,6 @@
                 }
 
                 if (reg && /^[A-Z]{4}/i.test(reg)) {
-                    rowSubj = ensureDistinctSubjectByCourse(rowSubj, reg);
                     const key = `${rowSubj}||${reg}`;
                     if (!seenInCsv.has(key)) {
                         seenInCsv.add(key);
