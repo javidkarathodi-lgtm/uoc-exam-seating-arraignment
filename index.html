@@ -164,7 +164,7 @@
                 <div>
                     <div class="flex items-center gap-2.5">
                         <span class="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">UniExam SeatPro</span>
-                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">v9.0 Exact Nominal Roll Reader</span>
+                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">v9.1 Strict 1-File = 1-Paper</span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
                         <span>Smart University Examination Suite</span>
@@ -188,7 +188,7 @@
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-100">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Examination Seating & Nominal Roll Suite</h1>
-                    <p class="text-slate-500 text-sm font-medium mt-1">Every uploaded Nominal Roll / Paper is kept strictly separate across Chief Summary, Invigilator Details & Slips</p>
+                    <p class="text-slate-500 text-sm font-medium mt-1">Each uploaded Nominal Roll file is treated as a separate Paper (even if the subject name is identical)</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
@@ -413,6 +413,11 @@
             updateBundleTabVisibility();
         });
 
+        // Unique paper key per uploaded file + subject so 3 uploaded files = 3 separate papers even if subject name is identical!
+        function getPaperKey(s) {
+            return `${s.fileId || 1}__${s.subject}__${s.type}`;
+        }
+
         function isFyugp135Eligible() {
             const sem = document.getElementById('examName').value;
             const isOddSem = (sem === 'First Sem' || sem === 'Third Sem' || sem === 'Fifth Sem');
@@ -535,7 +540,7 @@
                     currentSession,
                     sessionsData
                 };
-                localStorage.setItem('examSeatingAppState_v9.0', JSON.stringify(state));
+                localStorage.setItem('examSeatingAppState_v9.1', JSON.stringify(state));
                 const badge = document.getElementById('autoSaveBadge');
                 if (badge) badge.classList.remove('hidden');
             } catch (e) {
@@ -545,7 +550,7 @@
 
         function loadFromStorage() {
             try {
-                const keys = ['examSeatingAppState_v9.0', 'examSeatingAppState_v8.9', 'examSeatingAppState_v8.8'];
+                const keys = ['examSeatingAppState_v9.1', 'examSeatingAppState_v9.0'];
                 let raw = null;
                 for (const k of keys) {
                     raw = localStorage.getItem(k);
@@ -586,10 +591,11 @@
             let namedCount = 0;
 
             masterData.forEach(s => {
+                const pKey = getPaperKey(s);
                 if (schemeTotals[s.scheme] !== undefined) {
                     schemeTotals[s.scheme]++;
-                    schemePapers[s.scheme].add(s.subject + "||" + s.type);
-                    allDistinctPapers.add(s.subject + "||" + s.type);
+                    schemePapers[s.scheme].add(pKey);
+                    allDistinctPapers.add(pKey);
                 }
                 if (s.name && s.name.trim().length > 1) namedCount++;
             });
@@ -697,6 +703,7 @@
             return `${rawDate} ${currentSession} ${totalCount} ${reportLabel}`;
         }
 
+        // Keeps every uploaded file as a separate Question Paper entry (even if subject name is identical!)
         function getSortedQuestionPapers() {
             const regQPs = [];
             const sdeQPs = [];
@@ -705,15 +712,28 @@
                 const isSde = (s.type === 'SDE' || s.scheme === 'SDE');
                 const targetList = isSde ? sdeQPs : regQPs;
                 const displayType = isSde ? 'SDE' : 'REG';
-                let existing = targetList.find(item => item.subject === s.subject && item.type === displayType);
+                const pKey = getPaperKey(s);
+
+                let existing = targetList.find(item => item.paperKey === pKey);
                 if (existing) {
                     existing.count++;
                 } else {
-                    targetList.push({ subject: s.subject, type: displayType, count: 1, slot: s.slot || '', scheme: s.scheme || '' });
+                    targetList.push({
+                        paperKey: pKey,
+                        fileId: s.fileId || 1,
+                        subject: s.subject,
+                        type: displayType,
+                        count: 1,
+                        slot: s.slot || '',
+                        scheme: s.scheme || ''
+                    });
                 }
             });
 
-            const sortFn = (a, b) => a.subject.localeCompare(b.subject, undefined, { numeric: true, sensitivity: 'base' });
+            const sortFn = (a, b) => {
+                const cmp = a.subject.localeCompare(b.subject, undefined, { numeric: true, sensitivity: 'base' });
+                return cmp !== 0 ? cmp : (a.fileId - b.fileId);
+            };
             regQPs.sort(sortFn);
             sdeQPs.sort(sortFn);
 
@@ -766,16 +786,12 @@
                 document.getElementById('printableArea').innerHTML = `
                     <div class="flex flex-col items-center justify-center h-full text-indigo-600 py-20 no-print font-sans">
                         <svg class="animate-spin w-10 h-10 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <p class="text-base font-extrabold">Scanning Nominal Rolls for ${currentSession} Session...</p>
+                        <p class="text-base font-extrabold">Scanning ${files.length} Nominal Roll File(s) for ${currentSession} Session...</p>
                     </div>`;
 
-                const seenFiles = new Set();
+                // Process EVERY uploaded file with its own unique fileId (1, 2, 3...)
                 for (let fIdx = 0; fIdx < files.length; fIdx++) {
                     const file = files[fIdx];
-                    const fileKey = `${file.name}_${file.size}`;
-                    if (seenFiles.has(fileKey)) continue;
-                    seenFiles.add(fileKey);
-
                     const fname = file.name.toLowerCase();
                     try {
                         if (fname.endsWith('.pdf')) {
@@ -789,10 +805,11 @@
                     }
                 }
 
+                // Deduplicate only within the SAME fileId + Subject + RegNo
                 const uniqueMaster = [];
                 const seenEntries = new Set();
                 masterData.forEach(item => {
-                    const entryKey = `${item.subject}||${item.type}||${item.regNo}`;
+                    const entryKey = `${item.fileId}||${item.subject}||${item.regNo}`;
                     if (!seenEntries.has(entryKey)) {
                         seenEntries.add(entryKey);
                         uniqueMaster.push(item);
@@ -835,8 +852,7 @@
             return s.toUpperCase();
         }
 
-        // Cleanly extracts Paper Details / Subject from a page's full text or filename
-        function parsePageMetadata(cleanPageText, fallbackSubject, fallbackScheme, fallbackType, fallbackSlot, fileName) {
+        function parsePageMetadata(cleanPageText, fallbackSubject, fallbackScheme, fallbackType, fallbackSlot) {
             let subj = fallbackSubject;
             let scheme = fallbackScheme;
             let bType = fallbackType;
@@ -863,7 +879,6 @@
                 slot = slotMatch[1].trim().replace(/\s*\|\s*/g, ' ');
             }
 
-            // Try multiple Calicut University header patterns for Paper / Subject
             const paperDetailsMatch = cleanPageText.match(/Paper\s*Details\s*:?\s*\|?\s*(.*?)(?=Exam\s*Date|Date\s*of\s*Exam|SI\.No|Sl\.No|#|Register\s*Number|Reg\.?\s*No)/i);
             const paperColonMatch = cleanPageText.match(/\bPaper\s*:\s*\|?\s*(.*?)(?=Slot|Exam\s*Date|Date\s*of\s*Exam|SI\.No|Sl\.No|#|Register\s*Number)/i);
             const courseBracketMatch = cleanPageText.match(/Course\s*:?\s*\|?\s*([^\n\|]+?\[[^\]]+\])/i);
@@ -893,7 +908,6 @@
 
             const singleRegTest = /^[A-Z]{4}[A-Z0-9]{2,5}\d{2,4}$/;
 
-            // Default scheme from filename or dropdown
             let fileScheme = document.getElementById('scheme').value;
             let fileBroadType = "REG";
             if (/SDE/i.test(file.name)) { fileScheme = "SDE"; fileBroadType = "SDE"; }
@@ -901,7 +915,6 @@
             else if (/PG/i.test(file.name)) { fileScheme = "PG"; }
             else if (/CBCSS/i.test(file.name)) { fileScheme = "CBCSS"; }
 
-            // Clean fallback subject from filename (guarantees every uploaded file has a unique default subject!)
             let cleanFileName = file.name.replace(/\.pdf$/i, '').replace(/^NR_/i, '').trim();
             const fnAfterYear = cleanFileName.match(/202\d[_\-\s]+(.*)/i);
             let fileFallbackSubject = "PAPER DETAILS: " + (fnAfterYear && fnAfterYear[1].trim() ? fnAfterYear[1].trim() : cleanFileName).toUpperCase();
@@ -910,6 +923,7 @@
             let activeScheme = fileScheme;
             let activeBroadType = fileBroadType;
             let activeSlot = "";
+            let subPaperCounter = 0;
 
             let fileSubjectsCount = {};
 
@@ -933,7 +947,6 @@
 
                 rows.sort((a, b) => b.y - a.y);
 
-                // First build the full text of this page to accurately extract multi-line headers (Paper Details / Course / Slot)
                 let pageLines = [];
                 rows.forEach(r => {
                     r.items.sort((a, b) => a.x - b.x);
@@ -941,16 +954,15 @@
                 });
                 const cleanPageText = pageLines.join(" ").replace(/\s+/g, " ");
 
-                // Check if this page has a header block (e.g. Page 1, or a new Nominal Roll section on Page X)
                 if (/(?:Paper\s*Details|Course\s*:|Nominal\s*Roll|University\s*of\s*Calicut)/i.test(cleanPageText)) {
-                    const meta = parsePageMetadata(cleanPageText, activeSubject, activeScheme, activeBroadType, activeSlot, file.name);
+                    const meta = parsePageMetadata(cleanPageText, activeSubject, activeScheme, activeBroadType, activeSlot);
+                    if (meta.subject !== activeSubject && i > 1) subPaperCounter++;
                     activeSubject = meta.subject;
                     activeScheme = meta.scheme;
                     activeBroadType = meta.type;
                     activeSlot = meta.slot;
                 }
 
-                // Auto-detect global College, Semester, Date, Month from page text
                 const colMatch = cleanPageText.match(/College\s*:\s*([^,\n]+(?:,[^,\n]+)?)(?=\s+Course|\s+Paper|\s+Slot|\s+Date)/i);
                 if (colMatch && colMatch[1] && !document.getElementById('collegeName').value.trim()) {
                     document.getElementById('collegeName').value = colMatch[1].trim();
@@ -975,13 +987,13 @@
                 if (/4\/202\d/i.test(cleanPageText) || /April/i.test(cleanPageText)) document.getElementById('examMonth').value = "April";
                 else if (/11\/202\d/i.test(cleanPageText) || /November/i.test(cleanPageText)) document.getElementById('examMonth').value = "November";
 
-                // Now extract students row-by-row on this page (also checking if a mid-page header appears)
                 let midPageBuffer = "";
                 rows.forEach(r => {
                     const rowLine = r.items.map(it => it.str).join(" ");
                     if (/(?:Paper\s*Details|Course\s*:|Slot\s*:)/i.test(rowLine)) {
                         midPageBuffer += " " + rowLine;
-                        const updated = parsePageMetadata(midPageBuffer.replace(/\s+/g, " "), activeSubject, activeScheme, activeBroadType, activeSlot, file.name);
+                        const updated = parsePageMetadata(midPageBuffer.replace(/\s+/g, " "), activeSubject, activeScheme, activeBroadType, activeSlot);
+                        if (updated.subject !== activeSubject) subPaperCounter++;
                         activeSubject = updated.subject;
                         activeScheme = updated.scheme;
                         activeBroadType = updated.type;
@@ -1000,7 +1012,11 @@
                             }
                             const cleanedName = cleanExtractedName(nameParts.join(" "));
 
+                            // Unique fileId per uploaded file (plus subPaperCounter if multiple papers exist in 1 PDF)
+                            const uniqueFileId = fileIndex * 100 + subPaperCounter;
+
                             masterData.push({
+                                fileId: uniqueFileId,
                                 regNo: token,
                                 name: cleanedName,
                                 subject: activeSubject,
@@ -1019,11 +1035,11 @@
 
             const entries = Object.entries(fileSubjectsCount);
             if (entries.length === 0) {
-                fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-red-200"><span class="font-semibold text-red-700">${file.name}</span><span class="text-xs font-bold bg-red-100 text-red-800 px-2 py-0.5 rounded">0 Students</span></div>`);
+                fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-red-200"><span class="font-semibold text-red-700">Paper #${fileIndex}: ${file.name}</span><span class="text-xs font-bold bg-red-100 text-red-800 px-2 py-0.5 rounded">0 Students</span></div>`);
             } else {
                 entries.forEach(([key, cnt]) => {
                     const [sch, subjTitle] = key.split(' • ');
-                    fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700">${file.name} &rarr; <span class="text-indigo-700 font-bold">${subjTitle.replace(/^PAPER DETAILS:\s*/i, '')}</span></span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${sch} • ${cnt} Students</span></div>`);
+                    fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700"><b class="text-emerald-800">Paper #${fileIndex}:</b> ${file.name} &rarr; <span class="text-indigo-700 font-bold">${subjTitle.replace(/^PAPER DETAILS:\s*/i, '')}</span></span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${sch} • ${cnt} Students</span></div>`);
                 });
             }
         }
@@ -1044,6 +1060,7 @@
 
             let fileSubjectsCount = {};
             const seenInCsv = new Set();
+            const uniqueFileId = fileIndex * 100;
             
             lines.forEach((line, i) => {
                 if (i === 0 || !line.trim()) return; 
@@ -1065,7 +1082,7 @@
                     const key = `${rowSubj}||${reg}`;
                     if (!seenInCsv.has(key)) {
                         seenInCsv.add(key);
-                        masterData.push({ regNo: reg, name: studentName, subject: rowSubj, slot: "", type: rowType, scheme: rowScheme });
+                        masterData.push({ fileId: uniqueFileId, regNo: reg, name: studentName, subject: rowSubj, slot: "", type: rowType, scheme: rowScheme });
                         const logKey = `${rowScheme} • ${rowSubj}`;
                         fileSubjectsCount[logKey] = (fileSubjectsCount[logKey] || 0) + 1;
                     }
@@ -1074,7 +1091,7 @@
 
             Object.entries(fileSubjectsCount).forEach(([key, cnt]) => {
                 const [sch, subjTitle] = key.split(' • ');
-                fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700">${file.name} &rarr; <span class="text-indigo-700 font-bold">${subjTitle.replace(/^PAPER DETAILS:\s*/i, '')}</span></span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${sch} • ${cnt} Students</span></div>`);
+                fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700"><b class="text-emerald-800">Paper #${fileIndex}:</b> ${file.name} &rarr; <span class="text-indigo-700 font-bold">${subjTitle.replace(/^PAPER DETAILS:\s*/i, '')}</span></span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${sch} • ${cnt} Students</span></div>`);
             });
         }
 
@@ -1089,11 +1106,6 @@
             const sdeStudents = masterData.filter(s => s.type === 'SDE');
             const defaultRooms = ["101", "102", "103", "201", "202", "205", "301", "302", "308", "309", "310", "311", "312", "313", "314", "315"];
             let globalHallNo = 1;
-
-            const nameLookup = {};
-            masterData.forEach(s => {
-                if (s.name) nameLookup[s.regNo] = s.name;
-            });
 
             function getCap(hallIdx) {
                 return customCapacities[hallIdx] && customCapacities[hallIdx] > 0 ? customCapacities[hallIdx] : defaultStrength;
@@ -1113,22 +1125,36 @@
 
             function allocateGroup(studentList) {
                 if (studentList.length === 0) return;
-                const bySubject = {};
+                const byPaper = {};
                 studentList.forEach(student => {
-                    if (!bySubject[student.subject]) bySubject[student.subject] = { type: student.type, scheme: student.scheme, regs: [] };
-                    if (!bySubject[student.subject].regs.includes(student.regNo)) bySubject[student.subject].regs.push(student.regNo);
+                    const pKey = getPaperKey(student);
+                    if (!byPaper[pKey]) {
+                        byPaper[pKey] = {
+                            paperKey: pKey,
+                            fileId: student.fileId || 1,
+                            subject: student.subject,
+                            type: student.type,
+                            scheme: student.scheme,
+                            students: []
+                        };
+                    }
+                    byPaper[pKey].students.push(student);
                 });
 
-                const sortedSubjectKeys = Object.keys(bySubject).sort((a, b) => 
-                    a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
-                );
+                // Sort papers A-Z by subject name, and by fileId if subject names are identical
+                const sortedPaperKeys = Object.keys(byPaper).sort((kA, kB) => {
+                    const pA = byPaper[kA];
+                    const pB = byPaper[kB];
+                    const cmp = pA.subject.localeCompare(pB.subject, undefined, { numeric: true, sensitivity: 'base' });
+                    return cmp !== 0 ? cmp : (pA.fileId - pB.fileId);
+                });
 
                 let currentHallData = createHallObj(globalHallNo);
                 let currentSeat = 0;
 
-                for (const subject of sortedSubjectKeys) {
-                    const info = bySubject[subject];
-                    for (const reg of info.regs) {
+                for (const pKey of sortedPaperKeys) {
+                    const info = byPaper[pKey];
+                    for (const stu of info.students) {
                         const maxCap = getCap(globalHallNo - 1);
                         if (currentSeat >= maxCap) {
                             hallAllocations.push(currentHallData);
@@ -1136,12 +1162,14 @@
                             currentSeat = 0;
                             currentHallData = createHallObj(globalHallNo);
                         }
-                        currentHallData.students.push({ 
-                            regNo: reg, 
-                            name: nameLookup[reg] || "",
-                            subject: subject, 
-                            type: info.type, 
-                            scheme: info.scheme 
+                        currentHallData.students.push({
+                            fileId: stu.fileId || 1,
+                            paperKey: pKey,
+                            regNo: stu.regNo,
+                            name: stu.name || "",
+                            subject: stu.subject,
+                            type: stu.type,
+                            scheme: stu.scheme
                         });
                         currentSeat++;
                     }
@@ -1449,8 +1477,6 @@
             let html = "";
 
             if (tabName === 'rooms') {
-                const allSubjects = [...new Set(masterData.map(s => s.subject))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-
                 html += `<div class="font-sans no-print">
                     <div id="dupWarningBanner" class="hidden mb-5 bg-red-50 border-2 border-red-300 text-red-900 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
                         <svg class="w-6 h-6 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -1464,16 +1490,17 @@
                             <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
                             <div>
                                 <h2 class="text-lg font-extrabold text-slate-800">[${currentSession} Session] Room & Invigilator Allocation (${hallAllocations.length} Halls)</h2>
-                                <p class="text-xs text-slate-400">Subjects ordered A-Z matching QP list • Students kept in exact Nominal Roll order</p>
+                                <p class="text-xs text-slate-400">Each uploaded Nominal Roll is kept as a separate Paper • Exact student order preserved</p>
                             </div>
                         </div>
                     </div>`;
                 
                 hallAllocations.forEach((hall, idx) => {
-                    const bySubj = {};
+                    const byPaper = {};
                     hall.students.forEach(s => {
-                        if (!bySubj[s.subject]) bySubj[s.subject] = [];
-                        bySubj[s.subject].push(s.regNo);
+                        const pKey = getPaperKey(s);
+                        if (!byPaper[pKey]) byPaper[pKey] = { subject: s.subject, regs: [] };
+                        byPaper[pKey].regs.push(s.regNo);
                     });
 
                     const hType = getHallType(hall);
@@ -1513,11 +1540,11 @@
                                     <span>Strength: ${hall.students.length}</span>
                                 </div>
                     `;
-                    for (let [subj, regs] of Object.entries(bySubj)) {
+                    for (let [pKey, info] of Object.entries(byPaper)) {
                         html += `
                             <div class="mb-3 last:mb-0">
-                                <div class="text-xs font-bold underline text-slate-800">${subj} (Count: ${regs.length})</div>
-                                <div class="text-sm font-bold mt-1 text-slate-900 leading-snug">${formatRegList(regs)}</div>
+                                <div class="text-xs font-bold underline text-slate-800">${info.subject} (Count: ${info.regs.length})</div>
+                                <div class="text-sm font-bold mt-1 text-slate-900 leading-snug">${formatRegList(info.regs)}</div>
                             </div>
                         `;
                     }
@@ -1527,18 +1554,15 @@
                             <div class="lg:col-span-3 bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
                                 <div class="font-bold text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2 mb-2.5">Paper Breakdown</div>
                     `;
-                    allSubjects.forEach(subj => {
-                        const cnt = bySubj[subj] ? bySubj[subj].length : 0;
-                        if (cnt > 0) {
-                            const shortSubj = subj.replace(/^PAPER DETAILS:\s*/i, '').substring(0, 26) + '...';
-                            html += `
-                                <div class="flex justify-between items-center text-xs mb-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
-                                    <span class="truncate pr-2 font-semibold text-slate-700" title="${subj}">${shortSubj}</span>
-                                    <span class="bg-indigo-600 text-white px-2 py-0.5 rounded-md font-bold text-[11px]">${cnt}</span>
-                                </div>
-                            `;
-                        }
-                    });
+                    for (let [pKey, info] of Object.entries(byPaper)) {
+                        const shortSubj = info.subject.replace(/^PAPER DETAILS:\s*/i, '').substring(0, 26) + '...';
+                        html += `
+                            <div class="flex justify-between items-center text-xs mb-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                                <span class="truncate pr-2 font-semibold text-slate-700" title="${info.subject}">${shortSubj}</span>
+                                <span class="bg-indigo-600 text-white px-2 py-0.5 rounded-md font-bold text-[11px]">${info.regs.length}</span>
+                            </div>
+                        `;
+                    }
                     html += `
                             </div>
                         </div>
@@ -1570,15 +1594,16 @@
                         <tbody>
                 `;
                 hallAllocations.forEach((hall, idx) => {
-                    const bySubj = {};
+                    const byPaper = {};
                     hall.students.forEach(s => {
-                        if (!bySubj[s.subject]) bySubj[s.subject] = [];
-                        bySubj[s.subject].push(s.regNo);
+                        const pKey = getPaperKey(s);
+                        if (!byPaper[pKey]) byPaper[pKey] = [];
+                        byPaper[pKey].push(s.regNo);
                     });
                     
                     let rangeStr = "";
                     let listStr = "";
-                    for (let [subj, regs] of Object.entries(bySubj)) {
+                    for (let [pKey, regs] of Object.entries(byPaper)) {
                         rangeStr += `<div class="mb-1.5">${formatRegRange(regs)}</div>`;
                         listStr += `<div class="mb-1.5">${formatRegList(regs)}</div>`;
                     }
@@ -1716,14 +1741,17 @@
                 `;
                 let distSl = 1;
                 hallAllocations.forEach(hall => {
-                    const hallSubjMap = {};
+                    const hallPaperMap = {};
                     hall.students.forEach(s => {
-                        const k = s.subject + "||" + s.type;
-                        if (!hallSubjMap[k]) hallSubjMap[k] = { subject: s.subject, type: s.type, count: 0 };
-                        hallSubjMap[k].count++;
+                        const k = getPaperKey(s);
+                        if (!hallPaperMap[k]) hallPaperMap[k] = { subject: s.subject, type: s.type, count: 0, fileId: s.fileId || 1 };
+                        hallPaperMap[k].count++;
                     });
-                    const sortedHallSubjs = Object.values(hallSubjMap).sort((a, b) => a.subject.localeCompare(b.subject, undefined, { numeric: true }));
-                    for (let item of sortedHallSubjs) {
+                    const sortedHallPapers = Object.values(hallPaperMap).sort((a, b) => {
+                        const cmp = a.subject.localeCompare(b.subject, undefined, { numeric: true });
+                        return cmp !== 0 ? cmp : (a.fileId - b.fileId);
+                    });
+                    for (let item of sortedHallPapers) {
                         html += `
                             <tr class="hover:bg-gray-50">
                                 <td class="text-center py-1.5">${distSl++}</td>
@@ -1740,11 +1768,16 @@
 
             else if (tabName === 'details') {
                 hallAllocations.forEach((hall) => {
-                    const subjCounts = {};
+                    const paperCounts = {};
                     hall.students.forEach(s => {
-                        subjCounts[s.subject] = (subjCounts[s.subject] || 0) + 1;
+                        const pKey = getPaperKey(s);
+                        if (!paperCounts[pKey]) paperCounts[pKey] = { subject: s.subject, count: 0, fileId: s.fileId || 1 };
+                        paperCounts[pKey].count++;
                     });
-                    const sortedSubjEntries = Object.entries(subjCounts).sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }));
+                    const sortedPaperEntries = Object.values(paperCounts).sort((a, b) => {
+                        const cmp = a.subject.localeCompare(b.subject, undefined, { numeric: true });
+                        return cmp !== 0 ? cmp : (a.fileId - b.fileId);
+                    });
 
                     html += `
                         <div class="page-break-hall avoid-break mb-4 pb-4 border-b border-gray-200 last:border-b-0 print:border-none print:mb-0 print:pb-0">
@@ -1772,12 +1805,12 @@
                                 <tbody>
                     `;
                     let sl = 1;
-                    for (let [subj, count] of sortedSubjEntries) {
+                    for (let item of sortedPaperEntries) {
                         html += `
                             <tr>
                                 <td class="text-center py-1">${sl++}</td>
-                                <td class="py-1">${subj}</td>
-                                <td class="text-center py-1 font-extrabold">${count}</td>
+                                <td class="py-1">${item.subject}</td>
+                                <td class="text-center py-1 font-extrabold">${item.count}</td>
                             </tr>
                         `;
                     }
@@ -1797,10 +1830,11 @@
                                 </thead>
                                 <tbody>
                     `;
-                    let currentSubj = "";
+                    let currentPaperKey = "";
                     hall.students.forEach((s, sIdx) => {
-                        let printSubj = s.subject !== currentSubj ? s.subject : "";
-                        currentSubj = s.subject;
+                        const pKey = getPaperKey(s);
+                        let printSubj = pKey !== currentPaperKey ? s.subject : "";
+                        currentPaperKey = pKey;
                         html += `
                             <tr class="hover:bg-gray-50 print:bg-transparent">
                                 <td class="text-center py-1 text-gray-500">RNBB${sIdx + 1}</td>
@@ -1823,11 +1857,12 @@
 
             else if (tabName === 'doorslips') {
                 hallAllocations.forEach((hall) => {
-                    const bySubj = {};
+                    const byPaper = {};
                     hall.students.forEach((s, idx) => {
                         const seatNum = idx + 1;
-                        if (!bySubj[s.subject]) bySubj[s.subject] = [];
-                        bySubj[s.subject].push({ reg: s.regNo, seat: seatNum });
+                        const pKey = getPaperKey(s);
+                        if (!byPaper[pKey]) byPaper[pKey] = { subject: s.subject, list: [] };
+                        byPaper[pKey].list.push({ reg: s.regNo, seat: seatNum });
                     });
 
                     html += `
@@ -1845,9 +1880,9 @@
                             </div>
                             <div class="space-y-4">
                     `;
-                    for (let [subj, list] of Object.entries(bySubj)) {
+                    for (let [pKey, info] of Object.entries(byPaper)) {
                         let currentPrefix = null;
-                        let formattedItems = list.map(item => {
+                        let formattedItems = info.list.map(item => {
                             const parts = splitRegNo(item.reg);
                             let dispReg = item.reg;
                             if (parts.prefix === currentPrefix && parts.num) {
@@ -1860,7 +1895,7 @@
 
                         html += `
                             <div class="border-b border-gray-300 pb-3 last:border-none">
-                                <div class="text-sm font-bold underline uppercase text-gray-800 mb-1.5">${subj} — [${list.length} Students]</div>
+                                <div class="text-sm font-bold underline uppercase text-gray-800 mb-1.5">${info.subject} — [${info.list.length} Students]</div>
                                 <div class="reg-giant text-sm font-bold text-black leading-relaxed">${formattedItems.join(', &nbsp;')}</div>
                             </div>
                         `;
@@ -1874,21 +1909,25 @@
 
             else if (tabName === 'paperslips') {
                 hallAllocations.forEach((hall) => {
-                    const subjMap = {};
+                    const paperMap = {};
                     hall.students.forEach((s, idx) => {
-                        if (!subjMap[s.subject]) subjMap[s.subject] = [];
-                        subjMap[s.subject].push({
+                        const pKey = getPaperKey(s);
+                        if (!paperMap[pKey]) paperMap[pKey] = { subject: s.subject, fileId: s.fileId || 1, candidates: [] };
+                        paperMap[pKey].candidates.push({
                             regNo: s.regNo,
                             name: s.name || "",
                             seatNo: `RNBB${idx + 1}`
                         });
                     });
 
-                    const sortedHallSubjects = Object.keys(subjMap).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                    const sortedHallPapers = Object.values(paperMap).sort((a, b) => {
+                        const cmp = a.subject.localeCompare(b.subject, undefined, { numeric: true });
+                        return cmp !== 0 ? cmp : (a.fileId - b.fileId);
+                    });
 
-                    sortedHallSubjects.forEach((subj) => {
-                        const candidates = subjMap[subj];
-                        const cleanSubjName = subj.replace(/^PAPER DETAILS:\s*/i, '');
+                    sortedHallPapers.forEach((paperObj) => {
+                        const candidates = paperObj.candidates;
+                        const cleanSubjName = paperObj.subject.replace(/^PAPER DETAILS:\s*/i, '');
 
                         html += `
                             <div class="page-break-paper avoid-break border-2 border-gray-800 p-6 mb-8 rounded-xl bg-white shadow-sm cambria-font">
