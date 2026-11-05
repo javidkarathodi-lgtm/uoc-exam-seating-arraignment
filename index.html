@@ -164,7 +164,7 @@
                 <div>
                     <div class="flex items-center gap-2.5">
                         <span class="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">UniExam SeatPro</span>
-                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">v9.2 Smart File & Date Guard</span>
+                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">v9.3 Auto-Date & Mismatch Filter</span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
                         <span>Smart University Examination Suite</span>
@@ -188,7 +188,7 @@
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-slate-100">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Examination Seating & Nominal Roll Suite</h1>
-                    <p class="text-slate-500 text-sm font-medium mt-1">Smart file verification with duplicate upload detection and exam date mismatch warnings</p>
+                    <p class="text-slate-500 text-sm font-medium mt-1">Auto-fetches Exam Date from uploaded files • Flags & skips wrong-date or duplicate files automatically</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
@@ -268,12 +268,12 @@
                         </div>
                         <div class="flex gap-2">
                             <div class="w-2/3">
-                                <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Exam Date</label>
+                                <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Exam Date (Auto)</label>
                                 <input type="text" id="examDate" value="29-10-2026" oninput="saveToStorage(); if(masterData.length && activeTab !== 'rooms') showTab(activeTab);" class="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 text-sm focus:border-purple-500 focus:outline-none bg-slate-50 font-bold text-slate-700">
                             </div>
                             <div class="w-1/3">
                                 <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Session</label>
-                                <select id="examSession" onchange="switchActiveSession(this.value);" class="w-full border border-purple-200 rounded-xl px-2.5 py-1.5 text-sm focus:border-purple-500 focus:outline-none bg-purple-50 font-extrabold text-purple-700">
+                                <select id="examSession" onchange="switchActiveSession(this.value);" class="w-full border border-purple-200 rounded-xl px-2 py-1.5 text-sm focus:border-purple-500 focus:outline-none bg-purple-50 font-extrabold text-purple-700">
                                     <option value="FN">FN</option>
                                     <option value="AN">AN</option>
                                 </select>
@@ -304,12 +304,12 @@
                     
                     <div class="text-center">
                         <label id="dropZone" class="custom-file-upload rounded-xl w-full flex flex-col items-center justify-center min-h-[72px] p-2">
-                            <input type="file" id="fileInput" multiple accept=".csv, .pdf" onchange="processFiles()" class="hidden">
+                            <input type="file" id="fileInput" multiple accept=".csv, .pdf" onchange="processFiles(true)" class="hidden">
                             <div class="text-xs text-slate-600 font-bold pointer-events-none">Click to select PDF / CSV<br><span class="text-[10px] text-slate-400 font-medium">or Drag & Drop files here</span></div>
                         </label>
                     </div>
                     <div class="mt-2.5 flex gap-2">
-                        <button id="processBtn" onclick="processFiles()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-1.5 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm">Process</button>
+                        <button id="processBtn" onclick="processFiles(false)" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-1.5 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm">Process</button>
                         <button onclick="clearFiles()" class="px-3.5 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 rounded-xl text-xs font-bold transition-colors">Clear</button>
                     </div>
                 </div>
@@ -327,7 +327,7 @@
                 </div>
             </div>
 
-            <!-- File Status (Displays Duplicate / Date Mismatch Warnings + Verification) -->
+            <!-- File Status (Displays Inline Date Mismatch & Duplicate File Alerts) -->
             <div id="fileStatusBox" class="hidden mb-6 p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-sm text-emerald-950"></div>
 
             <!-- Report Navigation Pills -->
@@ -392,8 +392,8 @@
 
         let currentSession = 'FN';
         let sessionsData = {
-            'FN': { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [], uploadedFileSigs: [] },
-            'AN': { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [], uploadedFileSigs: [] }
+            'FN': { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [], uploadedContentHashes: [], sessionMainDate: "" },
+            'AN': { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [], uploadedContentHashes: [], sessionMainDate: "" }
         };
 
         let masterData = [];
@@ -401,8 +401,8 @@
         let customCapacities = [];
         let savedRoomDetails = {};
         let fileLogs = [];
-        let uploadedFileSigs = [];
-        let fileWarnings = [];
+        let uploadedContentHashes = [];
+        let sessionMainDate = "";
         let isBarcodeMode = false;
         let activeTab = 'rooms';
         let isProcessingFiles = false;
@@ -466,23 +466,28 @@
                 customCapacities: [...customCapacities],
                 savedRoomDetails: {...savedRoomDetails},
                 fileLogs: [...fileLogs],
-                uploadedFileSigs: [...uploadedFileSigs]
+                uploadedContentHashes: [...uploadedContentHashes],
+                sessionMainDate: sessionMainDate
             };
         }
 
         function loadSessionState(sessionName) {
-            const data = sessionsData[sessionName] || { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [], uploadedFileSigs: [] };
+            const data = sessionsData[sessionName] || { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [], uploadedContentHashes: [], sessionMainDate: "" };
             masterData = data.masterData || [];
             hallAllocations = data.hallAllocations || [];
             customCapacities = data.customCapacities || [];
             savedRoomDetails = data.savedRoomDetails || {};
             fileLogs = data.fileLogs || [];
-            uploadedFileSigs = data.uploadedFileSigs || [];
-            fileWarnings = [];
+            uploadedContentHashes = data.uploadedContentHashes || [];
+            sessionMainDate = data.sessionMainDate || "";
+
+            if (sessionMainDate) {
+                document.getElementById('examDate').value = sessionMainDate;
+            }
 
             updateBundleTabVisibility();
 
-            if (masterData.length > 0) {
+            if (masterData.length > 0 || fileLogs.length > 0) {
                 allocateSeats();
                 renderStatusBox();
                 document.getElementById('tabsContainer').style.display = 'flex';
@@ -523,7 +528,7 @@
             dropZone.style.backgroundColor = '';
             if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                 fileInput.files = e.dataTransfer.files;
-                processFiles();
+                processFiles(true);
             }
         });
 
@@ -544,7 +549,7 @@
                     currentSession,
                     sessionsData
                 };
-                localStorage.setItem('examSeatingAppState_v9.2', JSON.stringify(state));
+                localStorage.setItem('examSeatingAppState_v9.3', JSON.stringify(state));
                 const badge = document.getElementById('autoSaveBadge');
                 if (badge) badge.classList.remove('hidden');
             } catch (e) {
@@ -554,7 +559,7 @@
 
         function loadFromStorage() {
             try {
-                const keys = ['examSeatingAppState_v9.2', 'examSeatingAppState_v9.1', 'examSeatingAppState_v9.0'];
+                const keys = ['examSeatingAppState_v9.3', 'examSeatingAppState_v9.2', 'examSeatingAppState_v9.1'];
                 let raw = null;
                 for (const k of keys) {
                     raw = localStorage.getItem(k);
@@ -643,23 +648,16 @@
             const totalRoomsReq = hallAllocations.length;
             const totalPapersCount = allDistinctPapers.size;
             const roomBreakdownText = roomBreakdownParts.length > 0 ? ` (${roomBreakdownParts.join(' | ')})` : '';
-
-            let warningsHtml = "";
-            if (fileWarnings.length > 0) {
-                warningsHtml = `<div class="mt-2 mb-2 p-3 bg-red-50 border border-red-300 rounded-xl text-xs font-bold text-red-900 space-y-1">`;
-                fileWarnings.forEach(w => {
-                    warningsHtml += `<div class="flex items-center gap-1.5"><svg class="w-4 h-4 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg><span>${w}</span></div>`;
-                });
-                warningsHtml += `</div>`;
-            }
+            const activeDateBadge = sessionMainDate ? `<span class="bg-purple-700 text-white px-2.5 py-1 rounded-lg text-xs font-extrabold shadow-sm">Exam Date: ${sessionMainDate}</span>` : '';
 
             statusBox.innerHTML = `
                 <div class="font-bold mb-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-emerald-200 pb-3 gap-2">
                     <span class="text-emerald-950 flex items-center gap-2">
                         <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        [${currentSession} Session] Nominal Rolls Verified (${totalPapersCount} Question ${totalPapersCount === 1 ? 'Paper' : 'Papers'} • ${namedCount} Names)
+                        [${currentSession} Session] Nominal Rolls Verified (${totalPapersCount} Valid ${totalPapersCount === 1 ? 'Paper' : 'Papers'} • ${namedCount} Names)
                     </span>
                     <div class="flex flex-wrap items-center gap-2">
+                        ${activeDateBadge}
                         ${breakdownHTML}
                         <span class="bg-teal-700 text-white px-3 py-1 rounded-lg text-xs font-extrabold shadow-sm">Total Papers: ${totalPapersCount}</span>
                         <span class="bg-emerald-700 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm">Total Students: ${masterData.length}</span>
@@ -669,8 +667,7 @@
                         </span>
                     </div>
                 </div>
-                ${warningsHtml}
-                <div class="space-y-1.5 mt-2 pl-1 max-h-52 overflow-y-auto text-xs">${fileLogs.join('')}</div>`;
+                <div class="space-y-1.5 mt-2 pl-1 max-h-60 overflow-y-auto text-xs">${fileLogs.join('')}</div>`;
             statusBox.classList.remove('hidden');
         }
 
@@ -776,72 +773,154 @@
             customCapacities = [];
             savedRoomDetails = {};
             fileLogs = [];
-            uploadedFileSigs = [];
-            fileWarnings = [];
-            sessionsData[currentSession] = { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [], uploadedFileSigs: [] };
+            uploadedContentHashes = [];
+            sessionMainDate = "";
+            sessionsData[currentSession] = { masterData: [], hallAllocations: [], customCapacities: [], savedRoomDetails: {}, fileLogs: [], uploadedContentHashes: [], sessionMainDate: "" };
             saveToStorage();
             loadSessionState(currentSession);
         }
 
-        async function processFiles() {
+        // Two-pass file processor:
+        // 1. Parses all uploaded files to extract their dates, subjects, and students.
+        // 2. Automatically determines the Main Exam Date (majority date across uploaded files).
+        // 3. Flags & skips any file that has a Date Mismatch or is a Duplicate Content upload, while reading all valid files!
+        async function processFiles(isFromFileInputChange = false) {
             if (isProcessingFiles) return;
             const files = document.getElementById('fileInput').files;
-            if (files.length === 0) return alert("Please select at least one PDF or CSV file.");
+            if (files.length === 0) {
+                if (masterData.length > 0) {
+                    allocateSeats();
+                    renderStatusBox();
+                    showTab(activeTab);
+                    return;
+                }
+                return alert("Please select at least one PDF or CSV file.");
+            }
             
             isProcessingFiles = true;
             const pBtn = document.getElementById('processBtn');
             if (pBtn) { pBtn.disabled = true; pBtn.textContent = "Verifying..."; }
 
             try {
-                fileWarnings = [];
+                // If user clicked "Process" button without choosing new files, reset current batch so it doesn't false-flag everything as duplicate
+                if (!isFromFileInputChange) {
+                    masterData = [];
+                    fileLogs = [];
+                    uploadedContentHashes = [];
+                    sessionMainDate = "";
+                }
+
                 document.getElementById('printableArea').innerHTML = `
                     <div class="flex flex-col items-center justify-center h-full text-indigo-600 py-20 no-print font-sans">
                         <svg class="animate-spin w-10 h-10 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <p class="text-base font-extrabold">Verifying and Scanning ${files.length} Nominal Roll File(s)...</p>
+                        <p class="text-base font-extrabold">Auto-Detecting Exam Date & Verifying ${files.length} File(s)...</p>
                     </div>`;
 
-                const currentSetExamDate = document.getElementById('examDate').value.trim();
+                // PASS 1: Parse all files into temporary objects first
+                let parsedBatch = [];
+                const baseFileIdx = uploadedContentHashes.length;
 
                 for (let fIdx = 0; fIdx < files.length; fIdx++) {
                     const file = files[fIdx];
-                    const fileSig = `${file.name}_${file.size}`;
-
-                    // Check for duplicate upload in current session
-                    if (uploadedFileSigs.includes(fileSig)) {
-                        fileWarnings.push(`<b>Duplicate File:</b> "${file.name}" was already uploaded in this session!`);
-                        continue;
-                    }
-                    uploadedFileSigs.push(fileSig);
-
                     const fname = file.name.toLowerCase();
                     try {
                         if (fname.endsWith('.pdf')) {
-                            await processPDF(file, fIdx + 1, currentSetExamDate);
+                            const res = await parsePDFToObject(file, baseFileIdx + fIdx + 1);
+                            parsedBatch.push(res);
                         } else if (fname.endsWith('.csv')) {
-                            await processCSV(file, fIdx + 1);
+                            const res = await parseCSVToObject(file, baseFileIdx + fIdx + 1);
+                            parsedBatch.push(res);
                         }
                     } catch (err) {
                         console.error("Error reading file:", file.name, err);
-                        fileLogs.push(`<div class="flex items-center gap-2 text-red-600"><b>${file.name}:</b> Error reading file</div>`);
+                        fileLogs.push(`<div class="flex items-center justify-between bg-red-50 px-3 py-1.5 rounded-lg border border-red-200"><span class="font-bold text-red-700">${file.name}</span><span class="text-xs font-extrabold bg-red-600 text-white px-2 py-0.5 rounded">Error Reading File</span></div>`);
                     }
                 }
 
-                const uniqueMaster = [];
-                const seenEntries = new Set();
-                masterData.forEach(item => {
-                    const entryKey = `${item.fileId}||${item.subject}||${item.type}||${item.regNo}`;
-                    if (!seenEntries.has(entryKey)) {
-                        seenEntries.add(entryKey);
-                        uniqueMaster.push(item);
+                // PASS 2: Auto-detect Main Exam Date!
+                // If sessionMainDate is not yet locked by an earlier batch, find the most frequent (majority) date in this batch
+                if (!sessionMainDate) {
+                    const dateCounts = {};
+                    parsedBatch.forEach(item => {
+                        if (item.detectedDate) {
+                            dateCounts[item.detectedDate] = (dateCounts[item.detectedDate] || 0) + 1;
+                        }
+                    });
+                    let bestDate = "";
+                    let maxCnt = 0;
+                    for (const [dt, cnt] of Object.entries(dateCounts)) {
+                        if (cnt > maxCnt) {
+                            maxCnt = cnt;
+                            bestDate = dt;
+                        }
                     }
-                });
-                masterData = uniqueMaster;
+                    if (bestDate) {
+                        sessionMainDate = bestDate;
+                        document.getElementById('examDate').value = sessionMainDate;
+                    }
+                }
 
-                if (masterData.length === 0 && fileWarnings.length === 0) {
+                // PASS 3: Verify each file against Content Duplicate & Main Exam Date Mismatch
+                let validPaperNumber = masterData.length > 0 ? (new Set(masterData.map(s => getPaperKey(s))).size + 1) : 1;
+
+                parsedBatch.forEach(item => {
+                    // 1. Check if empty
+                    if (item.students.length === 0) {
+                        fileLogs.push(`<div class="flex justify-between items-center bg-red-50 px-3 py-1.5 rounded-lg border border-red-200"><span class="font-semibold text-red-700">${item.fileName}</span><span class="text-xs font-bold bg-red-100 text-red-800 px-2 py-0.5 rounded">0 Students Found</span></div>`);
+                        return;
+                    }
+
+                    // 2. Check Content Duplicate (same subject + same register numbers list)
+                    if (uploadedContentHashes.includes(item.contentHash)) {
+                        fileLogs.push(`
+                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-amber-50 px-3 py-2 rounded-lg border-2 border-amber-300 gap-1">
+                                <span class="font-bold text-amber-950">${item.fileName} &rarr; <span class="text-amber-800">${item.summarySubject}</span></span>
+                                <span class="text-xs font-extrabold bg-amber-600 text-white px-2.5 py-0.5 rounded shadow-sm">⚠️ ALREADY UPLOADED (Duplicate Skipped)</span>
+                            </div>`);
+                        return;
+                    }
+
+                    // 3. Check Date Mismatch against auto-fetched sessionMainDate
+                    if (sessionMainDate && item.detectedDate && item.detectedDate !== sessionMainDate) {
+                        fileLogs.push(`
+                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-red-50 px-3 py-2 rounded-lg border-2 border-red-400 gap-1">
+                                <span class="font-bold text-red-950">${item.fileName} &rarr; <span class="text-red-800">${item.summarySubject}</span></span>
+                                <span class="text-xs font-extrabold bg-red-600 text-white px-2.5 py-0.5 rounded shadow-sm">❌ DATE MISMATCH (File Date: ${item.detectedDate} | Expected: ${sessionMainDate}) — Skipped</span>
+                            </div>`);
+                        return;
+                    }
+
+                    // 4. Valid File! Add to masterData and record hash
+                    uploadedContentHashes.push(item.contentHash);
+                    if (item.detectedCollege && !document.getElementById('collegeName').value.trim()) {
+                        document.getElementById('collegeName').value = item.detectedCollege;
+                    }
+                    if (item.detectedSem) document.getElementById('examName').value = item.detectedSem;
+                    if (item.detectedMonth) document.getElementById('examMonth').value = item.detectedMonth;
+                    if (item.hasFyug) document.getElementById('scheme').value = "FYUG";
+
+                    item.students.forEach(stu => masterData.push(stu));
+
+                    Object.entries(item.subjectsBreakdown).forEach(([key, cnt]) => {
+                        const [sch, subjTitle] = key.split(' • ');
+                        const dateTag = item.detectedDate ? ` • 📅 ${item.detectedDate}` : '';
+                        fileLogs.push(`
+                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-200 gap-1">
+                                <span class="font-semibold text-slate-700"><b class="text-emerald-800">Paper #${validPaperNumber++}:</b> ${item.fileName} &rarr; <span class="text-indigo-700 font-bold">${subjTitle.replace(/^PAPER DETAILS:\s*/i, '')}</span></span>
+                                <span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded shrink-0">✅ ${sch} • ${cnt} Students${dateTag}</span>
+                            </div>`);
+                    });
+                });
+
+                // Clear fileInput value so selecting the same or additional files later works cleanly
+                document.getElementById('fileInput').value = '';
+
+                if (masterData.length === 0) {
                     renderStatusBox();
                     document.getElementById('printableArea').innerHTML = `
                         <div class="flex flex-col items-center justify-center h-full text-red-500 py-20 no-print font-sans">
-                            <p class="text-lg font-bold">No Valid Register Numbers Found</p>
+                            <p class="text-lg font-bold">No Valid Nominal Rolls Loaded</p>
+                            <p class="text-xs text-slate-500 mt-1">Check the status box above for Date Mismatch or Duplicate File alerts.</p>
                         </div>`;
                     return;
                 }
@@ -853,7 +932,7 @@
                 document.getElementById('tabsContainer').style.display = 'flex';
                 document.getElementById('printContainer').style.display = 'flex';
                 document.getElementById('studentFinderBox').classList.remove('hidden');
-                showTab(activeTab);
+                showTab('rooms');
             } finally {
                 isProcessingFiles = false;
                 if (pBtn) { pBtn.disabled = false; pBtn.textContent = "Process"; }
@@ -917,7 +996,7 @@
             return { subject: subj.toUpperCase(), scheme, type: bType, slot };
         }
 
-        async function processPDF(file, fileIndex, currentSetExamDate) {
+        async function parsePDFToObject(file, fileIndex) {
             const arrayBuffer = await file.arrayBuffer();
             let pdf;
             try {
@@ -944,9 +1023,16 @@
             let activeBroadType = fileBroadType;
             let activeSlot = "";
             let subPaperCounter = 0;
-            let fileDetectedDate = "";
 
-            let fileSubjectsCount = {};
+            let detectedDate = "";
+            let detectedCollege = "";
+            let detectedSem = "";
+            let detectedMonth = "";
+            let hasFyug = false;
+
+            let students = [];
+            let subjectsBreakdown = {};
+            const seenInFile = new Set();
 
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
@@ -985,28 +1071,27 @@
                 }
 
                 const colMatch = cleanPageText.match(/College\s*:\s*([^,\n]+(?:,[^,\n]+)?)(?=\s+Course|\s+Paper|\s+Slot|\s+Date)/i);
-                if (colMatch && colMatch[1] && !document.getElementById('collegeName').value.trim()) {
-                    document.getElementById('collegeName').value = colMatch[1].trim();
+                if (colMatch && colMatch[1] && !detectedCollege) {
+                    detectedCollege = colMatch[1].trim();
                 }
 
-                if (/First\s+Semester/i.test(cleanPageText) || /First\s+Semester/i.test(file.name)) document.getElementById('examName').value = "First Sem";
-                else if (/Second\s+Semester/i.test(cleanPageText) || /Second\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Second Sem";
-                else if (/Third\s+Semester/i.test(cleanPageText) || /Third\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Third Sem";
-                else if (/Fourth\s+Semester/i.test(cleanPageText) || /Fourth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Fourth Sem";
-                else if (/Fifth\s+Semester/i.test(cleanPageText) || /Fifth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Fifth Sem";
-                else if (/Sixth\s+Semester/i.test(cleanPageText) || /Sixth\s+Semester/i.test(file.name)) document.getElementById('examName').value = "Sixth Sem";
+                if (/First\s+Semester/i.test(cleanPageText) || /First\s+Semester/i.test(file.name)) detectedSem = "First Sem";
+                else if (/Second\s+Semester/i.test(cleanPageText) || /Second\s+Semester/i.test(file.name)) detectedSem = "Second Sem";
+                else if (/Third\s+Semester/i.test(cleanPageText) || /Third\s+Semester/i.test(file.name)) detectedSem = "Third Sem";
+                else if (/Fourth\s+Semester/i.test(cleanPageText) || /Fourth\s+Semester/i.test(file.name)) detectedSem = "Fourth Sem";
+                else if (/Fifth\s+Semester/i.test(cleanPageText) || /Fifth\s+Semester/i.test(file.name)) detectedSem = "Fifth Sem";
+                else if (/Sixth\s+Semester/i.test(cleanPageText) || /Sixth\s+Semester/i.test(file.name)) detectedSem = "Sixth Sem";
 
-                if (activeScheme === "FYUG") {
-                    document.getElementById('scheme').value = "FYUG";
+                if (activeScheme === "FYUG") hasFyug = true;
+
+                // Extract Exam Date from PDF text
+                const dateMatch = cleanPageText.match(/(?:Exam\s*Date|Date\s*of\s*Examination)\s*:?\s*\|?\s*(\d{2}[\.\-\/]\d{2}[\.\-\/]\d{4})/i);
+                if (dateMatch && !detectedDate) {
+                    detectedDate = dateMatch[1].replace(/[\.\/]/g, '-');
                 }
 
-                const dateMatch = cleanPageText.match(/(?:Exam Date|Date of Examination)\s*:?\s*\|?\s*(\d{2}[\.\-]\d{2}[\.\-]\d{4})\s*(\d{2}:\d{2}\s*[AP]M)?/i);
-                if (dateMatch) {
-                    fileDetectedDate = dateMatch[1].replace(/\./g, '-');
-                }
-
-                if (/4\/202\d/i.test(cleanPageText) || /April/i.test(cleanPageText)) document.getElementById('examMonth').value = "April";
-                else if (/11\/202\d/i.test(cleanPageText) || /November/i.test(cleanPageText)) document.getElementById('examMonth').value = "November";
+                if (/4\/202\d/i.test(cleanPageText) || /April/i.test(cleanPageText)) detectedMonth = "April";
+                else if (/11\/202\d/i.test(cleanPageText) || /November/i.test(cleanPageText)) detectedMonth = "November";
 
                 let midPageBuffer = "";
                 rows.forEach(r => {
@@ -1032,49 +1117,49 @@
                                 nameParts.push(nextStr);
                             }
                             const cleanedName = cleanExtractedName(nameParts.join(" "));
-
                             const uniqueFileId = fileIndex * 100 + subPaperCounter;
+                            const stuKey = `${uniqueFileId}||${activeSubject}||${token}`;
 
-                            masterData.push({
-                                fileId: uniqueFileId,
-                                regNo: token,
-                                name: cleanedName,
-                                subject: activeSubject,
-                                slot: activeSlot,
-                                type: activeBroadType,
-                                scheme: activeScheme
-                            });
+                            if (!seenInFile.has(stuKey)) {
+                                seenInFile.add(stuKey);
+                                students.push({
+                                    fileId: uniqueFileId,
+                                    regNo: token,
+                                    name: cleanedName,
+                                    subject: activeSubject,
+                                    slot: activeSlot,
+                                    type: activeBroadType,
+                                    scheme: activeScheme
+                                });
 
-                            const logKey = `${activeScheme} • ${activeSubject}`;
-                            fileSubjectsCount[logKey] = (fileSubjectsCount[logKey] || 0) + 1;
+                                const logKey = `${activeScheme} • ${activeSubject}`;
+                                subjectsBreakdown[logKey] = (subjectsBreakdown[logKey] || 0) + 1;
+                            }
                             midPageBuffer = "";
                         }
                     }
                 });
             }
 
-            // Check Date Mismatch against selected Exam Date
-            if (fileDetectedDate && currentSetExamDate) {
-                // Normalize both dates to DD-MM-YYYY format for comparison
-                const normFileDate = fileDetectedDate.replace(/\//g, '-');
-                const normSetDate = currentSetExamDate.replace(/\//g, '-');
-                if (normFileDate !== normSetDate) {
-                    fileWarnings.push(`<b>Date Mismatch Alert:</b> File "${file.name}" has exam date <b>${normFileDate}</b>, but selected Exam Date is <b>${normSetDate}</b>!`);
-                }
-            }
+            // Content hash based on extracted subject + all register numbers in this file (detects duplicate content even if filename was renamed!)
+            const contentHash = `${activeSubject}__${students.map(s => s.regNo).join(',')}`;
+            const summarySubject = activeSubject.replace(/^PAPER DETAILS:\s*/i, '');
 
-            const entries = Object.entries(fileSubjectsCount);
-            if (entries.length === 0) {
-                fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-red-200"><span class="font-semibold text-red-700">Paper #${fileIndex}: ${file.name}</span><span class="text-xs font-bold bg-red-100 text-red-800 px-2 py-0.5 rounded">0 Students</span></div>`);
-            } else {
-                entries.forEach(([key, cnt]) => {
-                    const [sch, subjTitle] = key.split(' • ');
-                    fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700"><b class="text-emerald-800">Paper #${fileIndex}:</b> ${file.name} &rarr; <span class="text-indigo-700 font-bold">${subjTitle.replace(/^PAPER DETAILS:\s*/i, '')}</span></span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${sch} • ${cnt} Students</span></div>`);
-                });
-            }
+            return {
+                fileName: file.name,
+                detectedDate,
+                detectedCollege,
+                detectedSem,
+                detectedMonth,
+                hasFyug,
+                students,
+                subjectsBreakdown,
+                contentHash,
+                summarySubject
+            };
         }
 
-        async function processCSV(file, fileIndex) {
+        async function parseCSVToObject(file, fileIndex) {
             const text = await file.text();
             const lines = text.split('\n');
             let rawName = file.name.replace(/\.csv$/i, '').replace(/^NR_/i, '').trim();
@@ -1088,9 +1173,15 @@
             else if (/PG/i.test(rawName)) defaultScheme = "PG";
             else if (/CBCSS/i.test(rawName)) defaultScheme = "CBCSS";
 
-            let fileSubjectsCount = {};
+            let subjectsBreakdown = {};
+            let students = [];
             const seenInCsv = new Set();
             const uniqueFileId = fileIndex * 100;
+
+            // Check if filename has a date pattern DD-MM-YYYY or DD.MM.YYYY
+            let detectedDate = "";
+            const fnDateMatch = file.name.match(/(\d{2}[\.\-]\d{2}[\.\-]\d{4})/);
+            if (fnDateMatch) detectedDate = fnDateMatch[1].replace(/\./g, '-');
             
             lines.forEach((line, i) => {
                 if (i === 0 || !line.trim()) return; 
@@ -1112,17 +1203,26 @@
                     const key = `${rowSubj}||${reg}`;
                     if (!seenInCsv.has(key)) {
                         seenInCsv.add(key);
-                        masterData.push({ fileId: uniqueFileId, regNo: reg, name: studentName, subject: rowSubj, slot: "", type: rowType, scheme: rowScheme });
+                        students.push({ fileId: uniqueFileId, regNo: reg, name: studentName, subject: rowSubj, slot: "", type: rowType, scheme: rowScheme });
                         const logKey = `${rowScheme} • ${rowSubj}`;
-                        fileSubjectsCount[logKey] = (fileSubjectsCount[logKey] || 0) + 1;
+                        subjectsBreakdown[logKey] = (subjectsBreakdown[logKey] || 0) + 1;
                     }
                 }
             });
 
-            Object.entries(fileSubjectsCount).forEach(([key, cnt]) => {
-                const [sch, subjTitle] = key.split(' • ');
-                fileLogs.push(`<div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-emerald-100"><span class="font-semibold text-slate-700"><b class="text-emerald-800">Paper #${fileIndex}:</b> ${file.name} &rarr; <span class="text-indigo-700 font-bold">${subjTitle.replace(/^PAPER DETAILS:\s*/i, '')}</span></span><span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">${sch} • ${cnt} Students</span></div>`);
-            });
+            const contentHash = `${defaultSubject}__${students.map(s => s.regNo).join(',')}`;
+            return {
+                fileName: file.name,
+                detectedDate,
+                detectedCollege: "",
+                detectedSem: "",
+                detectedMonth: "",
+                hasFyug: defaultScheme === "FYUG",
+                students,
+                subjectsBreakdown,
+                contentHash,
+                summarySubject: defaultSubject.replace(/^PAPER DETAILS:\s*/i, '')
+            };
         }
 
         function allocateSeats() {
